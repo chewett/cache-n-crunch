@@ -1,5 +1,4 @@
 <?php
-
 namespace Chewett\CacheNCrunch\CacheNCrunch;
 
 /**
@@ -10,15 +9,31 @@ namespace Chewett\CacheNCrunch\CacheNCrunch;
 class CacheNCrunch
 {
 
-    public static $jsFiles = [];
+    private static $JS_CACHE = 'static/js/';
+    private static $JS_LOADING_FILES = 'CacheNCrunch/js/';
+
+    private static $cacheDirectory = '';
+
+    /** @var CachingFile[] */
+    private static $jsFiles = [];
+    /** @var bool */
+    private static $debugMode = false;
+
+    public function setUpCacheDirectory($cacheDirectory) {
+        self::$cacheDirectory = $cacheDirectory;
+    }
 
     /**
      * Registers the javascript file with the CacheNCrunch library
      * @param string $path Path to the Javascript file to be registered with the library
      * @param string $name Reference name of the file
      */
-    public static function register($path, $name) {
-        self::$jsFiles[$name] = $path;
+    public static function register($scriptName, $publicPath, $physicalPath) {
+        self::$jsFiles[$scriptName] = new CachingFile($scriptName, $publicPath, $physicalPath);
+    }
+
+    public static function setDebug($debug) {
+        self::$debugMode = $debug;
     }
 
     /**
@@ -26,8 +41,11 @@ class CacheNCrunch
      */
     public static function getScriptImports() {
         $stringImports = '';
-        foreach(self::$jsFiles as $filename => $path) {
-            $stringImports .= "<script src='{$path}'></script>";
+        foreach(self::$jsFiles as $filename => $cachingFile) {
+            if(!self::$debugMode) {
+                $stringImports .= "<script src='{$cachingFile->getPublicPath()}'></script>";
+            }
+
         }
         return $stringImports;
     }
