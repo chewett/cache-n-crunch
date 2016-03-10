@@ -22,6 +22,7 @@ class CacheNCrunch
 
     public static function setUpCacheDirectory($cacheDirectory) {
         self::$cacheDirectory = $cacheDirectory;
+        self::checkCacheDirectory();
     }
 
     public static function getCacheDirectory() {
@@ -46,20 +47,32 @@ class CacheNCrunch
      */
     public static function getScriptImports() {
         $stringImports = '';
-        foreach(self::$jsFiles as $filename => $cachingFile) {
-            if(!self::$debugMode) {
-                $stringImports .= "<script src='{$cachingFile->getPublicPath()}'></script>";
-            }
+        $data = [];
+        if(!self::$debugMode) {
+            require_once self::$cacheDirectory . self::$JS_LOADING_FILES . self::$JS_FILE_CACHE_DETAILS;
+        }
 
+        foreach(self::$jsFiles as $scriptName => $cachingFile) {
+            $filePath = '';
+            if(!self::$debugMode) {
+                $filePath = $cachingFile->getPublicPath();
+            }else{
+                if(array_key_exists($scriptName, $data)) {
+                    $filePath = $data[$scriptName]['cachePath'];
+                }else{
+                    $filePath = $cachingFile->getPublicPath();
+                }
+            }
+            $stringImports .= "<script src='{$filePath}'></script>";
         }
         return $stringImports;
     }
 
     private static function checkCacheDirectory() {
         if(is_readable(self::$cacheDirectory . self::$JS_LOADING_FILES . self::$JS_FILE_CACHE_DETAILS)) {
-            return true;
+            return;
         }
-
+        CNCSetup::setupBaseDirs();
     }
 
 }
