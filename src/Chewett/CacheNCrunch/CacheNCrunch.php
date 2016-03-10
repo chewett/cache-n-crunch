@@ -1,5 +1,5 @@
 <?php
-namespace Chewett\CacheNCrunch\CacheNCrunch;
+namespace Chewett\CacheNCrunch;
 
 /**
  * Class CacheNCrunch
