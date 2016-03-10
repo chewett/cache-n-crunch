@@ -9,8 +9,9 @@ namespace Chewett\CacheNCrunch;
 class CacheNCrunch
 {
 
-    private static $JS_CACHE = 'static/js/';
-    private static $JS_LOADING_FILES = 'CacheNCrunch/js/';
+    public static $JS_CACHE = 'static/js/';
+    public static $JS_LOADING_FILES = 'CacheNCrunch/js/';
+    public static $JS_FILE_CACHE_DETAILS  = 'jsCacheFile.php';
 
     private static $cacheDirectory = '';
 
@@ -21,6 +22,10 @@ class CacheNCrunch
 
     public static function setUpCacheDirectory($cacheDirectory) {
         self::$cacheDirectory = $cacheDirectory;
+    }
+
+    public static function getCacheDirectory() {
+        return self::$cacheDirectory;
     }
 
     /**
@@ -48,6 +53,13 @@ class CacheNCrunch
 
         }
         return $stringImports;
+    }
+
+    private static function checkCacheDirectory() {
+        if(is_readable(self::$cacheDirectory . self::$JS_LOADING_FILES . self::$JS_FILE_CACHE_DETAILS)) {
+            return true;
+        }
+
     }
 
 }

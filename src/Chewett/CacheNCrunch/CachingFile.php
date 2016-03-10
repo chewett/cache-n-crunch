@@ -1,7 +1,6 @@
 <?php
 namespace Chewett\CacheNCrunch;
 
-
 /**
  * Class CachingFile
  * @package Chewett\CacheNCrunch\CacheNCrunch
