@@ -19,7 +19,7 @@ class CacheNCrunch
     /** @var bool */
     private static $debugMode = false;
 
-    public function setUpCacheDirectory($cacheDirectory) {
+    public static function setUpCacheDirectory($cacheDirectory) {
         self::$cacheDirectory = $cacheDirectory;
     }
 
