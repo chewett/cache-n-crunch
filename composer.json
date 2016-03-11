@@ -21,6 +21,7 @@
     "sebastian/phpcpd": "2.0.2",
     "theseer/phpdox": "0.8.1.1",
     "phploc/phploc": "2.1.4",
-    "squizlabs/php_codesniffer": "2.3.4"
+    "squizlabs/php_codesniffer": "2.3.4",
+    "chewett/php-uglifyjs2": "1.*"
   }
 }

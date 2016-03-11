@@ -4,10 +4,54 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "12bff3e055edc2606f0aa331c1751c05",
-    "content-hash": "a46c69d21007e02f30d3f8769a25c145",
+    "hash": "811f4b79e3f78a16e6407ebfaf107c17",
+    "content-hash": "61f2c5993f198cc3512b6492b0a087e0",
     "packages": [],
     "packages-dev": [
+        {
+            "name": "chewett/php-uglifyjs2",
+            "version": "v1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/chewett/php-uglifyjs2.git",
+                "reference": "6d9870f2650769f28c8e57cac956450223dbe47e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/chewett/php-uglifyjs2/zipball/6d9870f2650769f28c8e57cac956450223dbe47e",
+                "reference": "6d9870f2650769f28c8e57cac956450223dbe47e",
+                "shasum": ""
+            },
+            "require-dev": {
+                "components/jquery": "^2.2",
+                "pdepend/pdepend": "2.2.1",
+                "phploc/phploc": "2.1.4",
+                "phpmd/phpmd": "2.3.2",
+                "phpunit/phpunit": "5.2.*",
+                "sebastian/phpcpd": "2.0.2",
+                "squizlabs/php_codesniffer": "2.3.4",
+                "theseer/phpdox": "0.8.1.1",
+                "twbs/bootstrap": "^3.3"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Christopher Hewett",
+                    "email": "chewett@hotmail.co.uk"
+                }
+            ],
+            "description": "A basic wrapper around uglifyjs2 for PHP",
+            "time": "2016-03-07 23:52:51"
+        },
         {
             "name": "components/jquery",
             "version": "2.2.1",

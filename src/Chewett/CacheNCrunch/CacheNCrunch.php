@@ -1,5 +1,7 @@
 <?php
 namespace Chewett\CacheNCrunch;
+use Chewett\UglifyJS2\JSUglify2;
+
 
 /**
  * Class CacheNCrunch
@@ -87,6 +89,7 @@ class CacheNCrunch
         if(!is_dir(self::$cacheDirectory . self::$JS_CACHE)) {
             mkdir(self::$cacheDirectory . self::$JS_CACHE, 0777, true);
         }
+        $ug = new JSUglify2();
 
         $data = [];
         require self::$cacheDirectory . self::$JS_LOADING_FILES . self::$JS_FILE_CACHE_DETAILS;
@@ -100,16 +103,14 @@ class CacheNCrunch
                     $cachePath = self::$cacheDirectory . self::$JS_CACHE . $md5 . ".js";
                     $cachePath = str_replace("\\", "/", $cachePath);
                     $cacheUrl = self::$cachePath . self::$JS_CACHE . $md5 . ".js";
-                    //TODO: make crunch actually crunch!
-                    copy($file->getPhysicalPath(), $cachePath);
+                    $ug->uglify([$file->getPhysicalPath()], $cachePath);
                     $data[$scriptName] = ['md5' => $md5, 'cachePath' => $cachePath, 'cacheUrl' => $cacheUrl];
                 }
             }else{
                 $cachePath = self::$cacheDirectory . self::$JS_CACHE . $md5 . ".js";
                 $cachePath = str_replace("\\", "/", $cachePath);
                 $cacheUrl = self::$cachePath . self::$JS_CACHE . $md5 . ".js";
-                //TODO: make crunch actually crunch!
-                copy($file->getPhysicalPath(), $cachePath);
+                $ug->uglify([$file->getPhysicalPath()], $cachePath);
                 $data[$scriptName] = ['md5' => $md5, 'cachePath' => $cachePath, 'cacheUrl' => $cacheUrl];
             }
         }
