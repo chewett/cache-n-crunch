@@ -14,19 +14,27 @@ class CacheNCrunch
     public static $JS_FILE_CACHE_DETAILS  = 'jsCacheFile.php';
 
     private static $cacheDirectory = '';
+    private static $cachePath = '';
+
+    private static $latestCNCDataPath = '';
 
     /** @var CachingFile[] */
     private static $jsFiles = [];
     /** @var bool */
     private static $debugMode = false;
 
-    public static function setUpCacheDirectory($cacheDirectory) {
+    public static function setUpCacheDirectory($cacheDirectory, $cachePath) {
         self::$cacheDirectory = $cacheDirectory;
+        self::$cachePath = $cachePath;
         self::checkCacheDirectory();
     }
 
     public static function getCacheDirectory() {
         return self::$cacheDirectory;
+    }
+
+    public static function setLatestCNCDataPath($latest) {
+        self::$latestCNCDataPath = $latest;
     }
 
     /**
@@ -47,18 +55,22 @@ class CacheNCrunch
      */
     public static function getScriptImports() {
         $stringImports = '';
-        $data = [];
+        $JS_FILES = [];
         if(!self::$debugMode) {
-            require_once self::$cacheDirectory . self::$JS_LOADING_FILES . self::$JS_FILE_CACHE_DETAILS;
+            if(self::$latestCNCDataPath != '') {
+                require self::$latestCNCDataPath;
+            }else{
+                require self::$cacheDirectory . self::$JS_LOADING_FILES . self::$JS_FILE_CACHE_DETAILS;
+            }
         }
 
         foreach(self::$jsFiles as $scriptName => $cachingFile) {
             $filePath = '';
-            if(!self::$debugMode) {
+            if(self::$debugMode) {
                 $filePath = $cachingFile->getPublicPath();
             }else{
-                if(array_key_exists($scriptName, $data)) {
-                    $filePath = $data[$scriptName]['cachePath'];
+                if(array_key_exists($scriptName, $JS_FILES)) {
+                    $filePath = $JS_FILES[$scriptName]['cacheUrl'];
                 }else{
                     $filePath = $cachingFile->getPublicPath();
                 }
@@ -73,6 +85,40 @@ class CacheNCrunch
             return;
         }
         CNCSetup::setupBaseDirs();
+    }
+
+    public static function crunch() {
+        if(!is_dir(self::$cacheDirectory . self::$JS_CACHE)) {
+            mkdir(self::$cacheDirectory . self::$JS_CACHE, 0777, true);
+        }
+
+        $data = [];
+        require self::$cacheDirectory . self::$JS_LOADING_FILES . self::$JS_FILE_CACHE_DETAILS;
+
+        foreach(self::$jsFiles as $scriptName => $file) {
+            $fileContents = file_get_contents($file->getPhysicalPath());
+            $md5 = md5_file($file->getPhysicalPath());
+            if(array_key_exists($scriptName, $data)) {
+                if($data[$scriptName]['md5'] !== $md5) {
+                    unlink($scriptName['cachePath']);
+                    $cachePath = self::$cacheDirectory . self::$JS_CACHE . $md5 . ".js";
+                    $cachePath = str_replace("\\", "/", $cachePath);
+                    $cacheUrl = self::$cachePath . self::$JS_CACHE . $md5 . ".js";
+                    //TODO: make crunch actually crunch!
+                    copy($file->getPhysicalPath(), $cachePath);
+                    $data[$scriptName] = ['md5' => $md5, 'cachePath' => $cachePath, 'cacheUrl' => $cacheUrl];
+                }
+            }else{
+                $cachePath = self::$cacheDirectory . self::$JS_CACHE . $md5 . ".js";
+                $cachePath = str_replace("\\", "/", $cachePath);
+                $cacheUrl = self::$cachePath . self::$JS_CACHE . $md5 . ".js";
+                //TODO: make crunch actually crunch!
+                copy($file->getPhysicalPath(), $cachePath);
+                $data[$scriptName] = ['md5' => $md5, 'cachePath' => $cachePath, 'cacheUrl' => $cacheUrl];
+            }
+        }
+
+        CNCSetup::storeDataToCacheFile($data);
     }
 
 }
