@@ -18,8 +18,6 @@ class CacheNCrunch
     private static $cacheDirectory = '';
     private static $cachePath = '';
 
-    private static $latestCNCDataPath = '';
-
     /** @var CachingFile[] */
     private static $jsFiles = [];
     /** @var bool */
@@ -33,10 +31,6 @@ class CacheNCrunch
 
     public static function getCacheDirectory() {
         return self::$cacheDirectory;
-    }
-
-    public static function setLatestCNCDataPath($latest) {
-        self::$latestCNCDataPath = $latest;
     }
 
     /**
