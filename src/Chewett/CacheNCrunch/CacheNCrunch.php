@@ -57,11 +57,7 @@ class CacheNCrunch
         $stringImports = '';
         $JS_FILES = [];
         if(!self::$debugMode) {
-            if(self::$latestCNCDataPath != '') {
-                require self::$latestCNCDataPath;
-            }else{
-                require self::$cacheDirectory . self::$JS_LOADING_FILES . self::$JS_FILE_CACHE_DETAILS;
-            }
+            require self::$cacheDirectory . self::$JS_LOADING_FILES . self::$JS_FILE_CACHE_DETAILS;
         }
 
         foreach(self::$jsFiles as $scriptName => $cachingFile) {
