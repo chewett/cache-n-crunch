@@ -18,6 +18,8 @@ class CacheNCrunch
     private static $cacheDirectory = '';
     private static $cachePath = '';
 
+    private static $uglifyOptions = [];
+
     /** @var CachingFile[] */
     private static $jsFiles = [];
     /** @var bool */
@@ -44,6 +46,14 @@ class CacheNCrunch
 
     public static function setDebug($debug) {
         self::$debugMode = $debug;
+    }
+
+    public static function getUglifyOptions() {
+        return self::$uglifyOptions;
+    }
+
+    public static function setUglifyOptions($options) {
+        self::$uglifyOptions = $options;
     }
 
     /**
@@ -109,7 +119,7 @@ class CacheNCrunch
         $cachePath = self::$cacheDirectory . self::$JS_CACHE . $md5OfFile . ".js";
         $cachePath = str_replace("\\", "/", $cachePath);
         $cacheUrl = self::$cachePath . self::$JS_CACHE . $md5OfFile . ".js";
-        $ug->uglify([$file->getPhysicalPath()], $cachePath, ['compress' => '']);
+        $ug->uglify([$file->getPhysicalPath()], $cachePath, self::getUglifyOptions());
         return ['md5' => $md5OfFile, 'cachePath' => $cachePath, 'cacheUrl' => $cacheUrl];
     }
 
