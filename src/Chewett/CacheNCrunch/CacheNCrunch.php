@@ -83,7 +83,6 @@ class CacheNCrunch
         if(!is_dir(self::$cacheDirectory . self::$JS_CACHE)) {
             mkdir(self::$cacheDirectory . self::$JS_CACHE, 0777, true);
         }
-        $ug = new JSUglify2();
 
         $data = [];
         require self::$cacheDirectory . self::$JS_LOADING_FILES . self::$JS_FILE_CACHE_DETAILS;
@@ -94,22 +93,24 @@ class CacheNCrunch
             if(array_key_exists($scriptName, $data)) {
                 if($data[$scriptName]['md5'] !== $md5) {
                     unlink($scriptName['cachePath']);
-                    $cachePath = self::$cacheDirectory . self::$JS_CACHE . $md5 . ".js";
-                    $cachePath = str_replace("\\", "/", $cachePath);
-                    $cacheUrl = self::$cachePath . self::$JS_CACHE . $md5 . ".js";
-                    $ug->uglify([$file->getPhysicalPath()], $cachePath);
-                    $data[$scriptName] = ['md5' => $md5, 'cachePath' => $cachePath, 'cacheUrl' => $cacheUrl];
+                    $data[$scriptName] = self::setUpFile($md5, $file);
                 }
             }else{
-                $cachePath = self::$cacheDirectory . self::$JS_CACHE . $md5 . ".js";
-                $cachePath = str_replace("\\", "/", $cachePath);
-                $cacheUrl = self::$cachePath . self::$JS_CACHE . $md5 . ".js";
-                $ug->uglify([$file->getPhysicalPath()], $cachePath);
-                $data[$scriptName] = ['md5' => $md5, 'cachePath' => $cachePath, 'cacheUrl' => $cacheUrl];
+                $data[$scriptName] = self::setUpFile($md5, $file);
             }
         }
 
         CNCSetup::storeDataToCacheFile($data);
+    }
+
+    private static function setUpFile($md5OfFile, CachingFile $file) {
+        $ug = new JSUglify2();
+
+        $cachePath = self::$cacheDirectory . self::$JS_CACHE . $md5OfFile . ".js";
+        $cachePath = str_replace("\\", "/", $cachePath);
+        $cacheUrl = self::$cachePath . self::$JS_CACHE . $md5OfFile . ".js";
+        $ug->uglify([$file->getPhysicalPath()], $cachePath);
+        return ['md5' => $md5OfFile, 'cachePath' => $cachePath, 'cacheUrl' => $cacheUrl];
     }
 
 }
