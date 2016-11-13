@@ -7,7 +7,9 @@ class CNCSetup {
     public static function setupBaseDirs() {
         $cachePhpConfigDir = self::setupDirectories();
         $jsFileCachePath = $cachePhpConfigDir . CacheNCrunch::$JS_FILE_CACHE_DETAILS;
+        $internalCacheFile = $cachePhpConfigDir . CacheNCrunch::$INTERNAL_DETAILS_STORE;
         file_put_contents($jsFileCachePath, self::getStartOfAutoloadFile());
+        file_put_contents($internalCacheFile, self::getStartOfInternalFile());
     }
 
     private static function setupDirectories() {
@@ -26,6 +28,12 @@ class CNCSetup {
         return
             '<?php ' . PHP_EOL .
             '$JS_FILES = []; ' . PHP_EOL;
+    }
+
+    private static function getStartOfInternalFile() {
+        return json_encode([
+                "crunched_files" => []
+            ], JSON_PRETTY_PRINT);
     }
 
     public static function storeDataToCacheFile($data) {
