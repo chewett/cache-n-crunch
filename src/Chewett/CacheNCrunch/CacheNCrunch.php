@@ -13,7 +13,10 @@ class CacheNCrunch
 
     public static $JS_CACHE = 'static/js/';
     public static $JS_LOADING_FILES = 'CacheNCrunch/js/';
+    //Stores the details of what we have cached in php form (loaded during production use)
     public static $JS_FILE_CACHE_DETAILS  = 'jsCacheFile.php';
+    //Stores the details of precisely what files we have in json form (loaded during debug)
+    public static $INTERNAL_DETAILS_STORE = "details_store.json";
 
     private static $cacheDirectory = '';
     private static $cachePath = '';
