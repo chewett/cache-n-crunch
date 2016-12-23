@@ -47,6 +47,10 @@ class CacheNCrunch
         self::$jsFiles[$scriptName] = new CachingFile($scriptName, $publicPath, $physicalPath);
     }
 
+    public static function removeScript($scriptName) {
+        unset(self::$jsFiles[$scriptName]);
+    }
+
     public static function setDebug($debug) {
         self::$debugMode = $debug;
     }
@@ -99,6 +103,9 @@ class CacheNCrunch
 
         $data = [];
         require self::$cacheDirectory . self::$JS_LOADING_FILES . self::$JS_FILE_CACHE_DETAILS;
+        if(isset($JS_FILES)) {
+            $data = $JS_FILES;
+        }
 
         foreach(self::$jsFiles as $scriptName => $file) {
             $fileContents = file_get_contents($file->getPhysicalPath());
