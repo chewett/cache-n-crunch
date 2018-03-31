@@ -31,6 +31,14 @@ Possible implementation
 * JSON file stores all the details such as new files, etc
 * Each time the cache is modified json file is written out as a php file that works as the bootstrap
 
+TODO:
+-----
+
+* Remove the physical path when registering, set a web root
+* Implement crunching multiple files into one
+* Remove all comments but allow custom comments at the top of the file configurable
+
+
 
 Usage
 -----
