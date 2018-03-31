@@ -74,7 +74,6 @@ class CacheNCrunch
         }
 
         foreach(self::$jsFiles as $scriptName => $cachingFile) {
-            $filePath = '';
             if(self::$debugMode) {
                 $filePath = $cachingFile->getPublicPath();
             }else{
@@ -108,7 +107,6 @@ class CacheNCrunch
         }
 
         foreach(self::$jsFiles as $scriptName => $file) {
-            $fileContents = file_get_contents($file->getPhysicalPath());
             $md5 = md5_file($file->getPhysicalPath());
             if(array_key_exists($scriptName, $data)) {
                 if($data[$scriptName]['md5'] !== $md5) {
