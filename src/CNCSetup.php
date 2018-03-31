@@ -14,7 +14,7 @@ class CNCSetup {
 
     private static function setupDirectories() {
         if(!is_dir(CacheNCrunch::getCacheDirectory())) {
-            mkdir(CacheNCrunch::getCacheDirectory());
+            mkdir(CacheNCrunch::getCacheDirectory(), 0777, true);
         }
 
         $cachePhpConfigDir = CacheNCrunch::getCacheDirectory() . CacheNCrunch::$JS_LOADING_FILES;
