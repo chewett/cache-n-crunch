@@ -10,7 +10,7 @@ function test() {
     console.log("Self executing function");
 })();
 
-function a() {
+function mainJs() {
     var data = [];
     data.push('a');
     data.push('a');
