@@ -1,8 +1,9 @@
 <?php
 
-namespace Chewett\CacheNCrunch;
-use Symfony\Component\Filesystem\Filesystem;
+namespace Chewett\CacheNCrunch\Test;
 
+use Symfony\Component\Filesystem\Filesystem;
+use Chewett\CacheNCrunch\CacheNCrunch;
 
 /**
  * Class CacheNCrunchTest
@@ -11,7 +12,7 @@ use Symfony\Component\Filesystem\Filesystem;
  */
 class CacheNCrunchTest extends \PHPUnit_Framework_TestCase {
 
-    private static $CACHE_DIR = __DIR__ . "/../../../build/output/cache/";
+    private static $CACHE_DIR = __DIR__ . "/../build/output/cache/";
 
     public function setUp() {
         if(is_dir(self::$CACHE_DIR)) {
@@ -25,7 +26,7 @@ class CacheNCrunchTest extends \PHPUnit_Framework_TestCase {
 
     public function testDebugModeCacheOutput() {
         CacheNCrunch::setDebug(true);
-        CacheNCrunch::register("testJs", "/static/testJs.js", __DIR__ . "/../../../static/testJs.js");
+        CacheNCrunch::register("testJs", "/static/testJs.js", __DIR__ . "/../static/testJs.js");
 
         $this->assertEquals(
             "<script src='/static/testJs.js'></script>",
@@ -34,7 +35,7 @@ class CacheNCrunchTest extends \PHPUnit_Framework_TestCase {
     }
 
     public function testNoCachePresentOutput() {
-        CacheNCrunch::register("testJs", "/static/testJs.js", __DIR__ . "/../../../static/testJs.js");
+        CacheNCrunch::register("testJs", "/static/testJs.js", __DIR__ . "/../static/testJs.js");
 
         $this->assertEquals(
             "<script src='/static/testJs.js'></script>",
@@ -43,12 +44,12 @@ class CacheNCrunchTest extends \PHPUnit_Framework_TestCase {
     }
 
     public function testCrunch() {
-        CacheNCrunch::register("testJs", "/static/testJs.js", __DIR__ . "/../../../static/testJs.js");
+        CacheNCrunch::register("testJs", "/static/testJs.js", __DIR__ . "/../static/testJs.js");
         CacheNCrunch::crunch();
     }
 
     public function testCachePresentOutput() {
-        CacheNCrunch::register("testJs", "/static/testJs.js", __DIR__ . "/../../../static/testJs.js");
+        CacheNCrunch::register("testJs", "/static/testJs.js", __DIR__ . "/../static/testJs.js");
 
         $this->assertEquals(
             "<script src='/static/testJs.js'></script>",
@@ -57,14 +58,14 @@ class CacheNCrunchTest extends \PHPUnit_Framework_TestCase {
 
         CacheNCrunch::crunch();
         $this->assertEquals(
-            "<script src='/build/output/cache/static/js/6ffaf172520927af80aaca83b0e74e48.js'></script>",
+            "<script src='/build/output/cache/static/js/7b34b90e19469f31c16c4c559694e62f.js'></script>",
             CacheNCrunch::getScriptImports()
         );
     }
 
     public function testMultiCachePresentOutput() {
-        CacheNCrunch::register("testJs", "/static/testJs.js", __DIR__ . "/../../../static/testJs.js");
-        CacheNCrunch::register("testA", "/static/testA.js", __DIR__ . "/../../../static/testA.js");
+        CacheNCrunch::register("testJs", "/static/testJs.js", __DIR__ . "/../static/testJs.js");
+        CacheNCrunch::register("testA", "/static/testA.js", __DIR__ . "/../static/testA.js");
 
         $this->assertEquals(
             "<script src='/static/testJs.js'></script><script src='/static/testA.js'></script>",
@@ -73,16 +74,16 @@ class CacheNCrunchTest extends \PHPUnit_Framework_TestCase {
 
         CacheNCrunch::crunch();
         $this->assertEquals(
-            "<script src='/build/output/cache/static/js/6ffaf172520927af80aaca83b0e74e48.js'></script><script src='/build/output/cache/static/js/76082198a45cb1943e8855d258ebb4d0.js'></script>",
+            "<script src='/build/output/cache/static/js/7b34b90e19469f31c16c4c559694e62f.js'></script><script src='/build/output/cache/static/js/fd7e69d96495f4888b98493daf8f1886.js'></script>",
             CacheNCrunch::getScriptImports()
         );
     }
 
     public function testMultiCachePresentOutputTwoCrunches() {
-        CacheNCrunch::register("testJs", "/static/testJs.js", __DIR__ . "/../../../static/testJs.js");
+        CacheNCrunch::register("testJs", "/static/testJs.js", __DIR__ . "/../static/testJs.js");
         CacheNCrunch::crunch();
         CacheNCrunch::removeScript("testJs");
-        CacheNCrunch::register("testA", "/static/testA.js", __DIR__ . "/../../../static/testA.js");
+        CacheNCrunch::register("testA", "/static/testA.js", __DIR__ . "/../static/testA.js");
         CacheNCrunch::crunch();
 
         require self::$CACHE_DIR . CacheNCrunch::$JS_LOADING_FILES . CacheNCrunch::$JS_FILE_CACHE_DETAILS;

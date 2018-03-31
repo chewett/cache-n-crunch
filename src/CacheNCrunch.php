@@ -1,6 +1,6 @@
 <?php
 namespace Chewett\CacheNCrunch;
-use Chewett\UglifyJS2\JSUglify2;
+use Chewett\UglifyJS\JSUglify;
 
 
 /**
@@ -124,7 +124,7 @@ class CacheNCrunch
     }
 
     private static function setUpFile($md5OfFile, CachingFile $file) {
-        $ug = new JSUglify2();
+        $ug = new JSUglify();
 
         $cachePath = self::$cacheDirectory . self::$JS_CACHE . $md5OfFile . ".js";
         $cachePath = str_replace("\\", "/", $cachePath);

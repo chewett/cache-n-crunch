@@ -1,14 +1,14 @@
 <?php
-namespace Chewett\CacheNCrunch;
+namespace Chewett\CacheNCrunch\Test;
 
-
+use Chewett\CacheNCrunch\CacheNCrunch;
 use Symfony\Component\Filesystem\Filesystem;
 
 
 class CNCSetupTest extends \PHPUnit_Framework_TestCase {
 
     public function testSetup() {
-        $cacheDir = __DIR__ . "/../../../build/output/cache/";
+        $cacheDir = __DIR__ . "/../build/output/cache/";
 
         if(is_dir($cacheDir)) {
             $fs = new Filesystem();
