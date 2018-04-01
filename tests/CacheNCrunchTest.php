@@ -57,10 +57,12 @@ class CacheNCrunchTest extends \PHPUnit_Framework_TestCase {
         );
 
         CacheNCrunch::crunch();
-        $this->assertEquals(
-            "<script src='/build/output/cache/static/js/7b34b90e19469f31c16c4c559694e62f.js'></script>",
-            CacheNCrunch::getScriptImports()
-        );
+        $importStatements = CacheNCrunch::getScriptImports();
+
+        //Make sure there is only one import
+        $this->assertEquals(1, substr_count($importStatements, "script src="));
+        //Make sure its not importing the old testJs file directly
+        $this->assertEquals(0, substr_count($importStatements, "testJs.js"));
     }
 
     public function testMultiCachePresentOutput() {
@@ -73,10 +75,10 @@ class CacheNCrunchTest extends \PHPUnit_Framework_TestCase {
         );
 
         CacheNCrunch::crunch();
-        $this->assertEquals(
-            "<script src='/build/output/cache/static/js/7b34b90e19469f31c16c4c559694e62f.js'></script><script src='/build/output/cache/static/js/fd7e69d96495f4888b98493daf8f1886.js'></script>",
-            CacheNCrunch::getScriptImports()
-        );
+        $importStatements = CacheNCrunch::getScriptImports();
+
+        //Make sure there is onl one import and we have crunched the files together
+        $this->assertEquals(1, substr_count($importStatements, "script src="));
     }
 
     public function testMultiCachePresentOutputTwoCrunches() {

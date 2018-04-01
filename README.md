@@ -34,10 +34,17 @@ Possible implementation
 TODO:
 -----
 
-* Remove the physical path when registering, set a web root
-* Implement crunching multiple files into one
 * Remove all comments but allow custom comments at the top of the file configurable
-
+* Allow getting the details of all previously crushed files and their constitutent paths
+* Allow crushing by identifier (using the details of the constituent parts)
+* Allow checking of identifiers to find what hasnt yet been updated (has changes in constituent files)
+* Comment all code
+* Comment all tests
+* Write some more tests
+* Create an example implementation repo?
+* Run speedtests on importing a json file and including the php file?
+(only used the PHP file including as I have made the 
+assumptions that it will be faster, possibly not true?)
 
 
 Usage

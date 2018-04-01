@@ -11,26 +11,25 @@ use Chewett\UglifyJS\JSUglify;
 class CacheNCrunch
 {
 
-    public static $JS_CACHE = 'static/js/';
+    public static $JS_CACHE_DIR_PATH = 'static/js/';
     public static $JS_LOADING_FILES = 'CacheNCrunch/js/';
+    public static $JS_TEMP_DIR_PATH = 'jsTmp/';
     //Stores the details of what we have cached in php form (loaded during production use)
     public static $JS_FILE_CACHE_DETAILS  = 'jsCacheFile.php';
-    //Stores the details of precisely what files we have in json form (loaded during debug)
-    public static $INTERNAL_DETAILS_STORE = "details_store.json";
 
     private static $cacheDirectory = '';
-    private static $cachePath = '';
+    private static $cacheWebRoot = '';
 
     private static $uglifyOptions = [];
 
     /** @var CachingFile[] */
-    private static $jsFiles = [];
+    private static $filesToImport = [];
     /** @var bool */
     private static $debugMode = false;
 
     public static function setUpCacheDirectory($cacheDirectory, $cachePath) {
         self::$cacheDirectory = $cacheDirectory;
-        self::$cachePath = $cachePath;
+        self::$cacheWebRoot = $cachePath;
         self::checkCacheDirectory();
     }
 
@@ -44,11 +43,11 @@ class CacheNCrunch
      * @param string $name Reference name of the file
      */
     public static function register($scriptName, $publicPath, $physicalPath) {
-        self::$jsFiles[$scriptName] = new CachingFile($scriptName, $publicPath, $physicalPath);
+        self::$filesToImport[$scriptName] = new CachingFile($scriptName, $publicPath, $physicalPath);
     }
 
     public static function removeScript($scriptName) {
-        unset(self::$jsFiles[$scriptName]);
+        unset(self::$filesToImport[$scriptName]);
     }
 
     public static function setDebug($debug) {
@@ -64,28 +63,30 @@ class CacheNCrunch
     }
 
     /**
-     * When called all registered libaries will be returned with script tags linking to them
+     * When called all registered libraries will be returned with script tags linking to them
      */
     public static function getScriptImports() {
         $stringImports = '';
         $JS_FILES = [];
         if(!self::$debugMode) {
+            //Import the crunched list of files we know about
             require self::$cacheDirectory . self::$JS_LOADING_FILES . self::$JS_FILE_CACHE_DETAILS;
         }
 
-        foreach(self::$jsFiles as $scriptName => $cachingFile) {
-            if(self::$debugMode) {
-                $filePath = $cachingFile->getPublicPath();
-            }else{
-                if(array_key_exists($scriptName, $JS_FILES)) {
-                    $filePath = $JS_FILES[$scriptName]['cacheUrl'];
-                }else{
-                    $filePath = $cachingFile->getPublicPath();
-                }
+        $currentImportsHashString = self::getHashOfCurrentImports();
+
+        //If we are not in debug mode and we have this file already crunched then link to the crunched file
+        if(!self::$debugMode && isset($JS_FILES[$currentImportsHashString])) {
+            return CNCHtmlHelper::createJsImportStatement($JS_FILES[$currentImportsHashString]['cacheUrl']);
+
+        }else{
+            //Otherwise create the X import statements needed to import the raw JS
+            $stringImports = [];
+            foreach(self::$filesToImport as $scriptName => $cachingFile) {
+                $stringImports[] = CNCHtmlHelper::createJsImportStatement($cachingFile->getPublicPath());
             }
-            $stringImports .= "<script src='{$filePath}'></script>";
+            return implode("", $stringImports);
         }
-        return $stringImports;
     }
 
     private static function checkCacheDirectory() {
@@ -95,9 +96,28 @@ class CacheNCrunch
         CNCSetup::setupBaseDirs();
     }
 
+    /**
+     * This loops through the list of current imports and generates the specific hash representing
+     * the cache object that will be created for this specific file set
+     * @return string Hash string representing the cache object for the file set
+     */
+    private static function getHashOfCurrentImports() {
+        //Get all the script names I want to import
+        $scriptNames = [];
+        foreach(self::$filesToImport as $fileToImport) {
+            $scriptNames[] = $fileToImport->getScriptName();
+        }
+
+        //This means that whatever order the scripts were registered if they are the same set it will be the same
+        sort($scriptNames);
+
+        //Now we get the hash of the script names, this forms the unique hash used for this combination
+        return md5(json_encode($scriptNames));
+    }
+
     public static function crunch() {
-        if(!is_dir(self::$cacheDirectory . self::$JS_CACHE)) {
-            mkdir(self::$cacheDirectory . self::$JS_CACHE, 0777, true);
+        if(!is_dir(self::$cacheDirectory . self::$JS_CACHE_DIR_PATH)) {
+            mkdir(self::$cacheDirectory . self::$JS_CACHE_DIR_PATH, 0777, true);
         }
 
         $data = [];
@@ -106,29 +126,64 @@ class CacheNCrunch
             $data = $JS_FILES;
         }
 
-        foreach(self::$jsFiles as $scriptName => $file) {
-            $md5 = md5_file($file->getPhysicalPath());
-            if(array_key_exists($scriptName, $data)) {
-                if($data[$scriptName]['md5'] !== $md5) {
-                    unlink($scriptName['cachePath']);
-                    $data[$scriptName] = self::setUpFile($md5, $file);
-                }
-            }else{
-                $data[$scriptName] = self::setUpFile($md5, $file);
+        $md5HashOfScriptNames = self::getHashOfCurrentImports();
+        $fileSetNeedsCrunching = false;
+
+        if(isset($data[$md5HashOfScriptNames])) {
+            //If we already have this hash, lets check each file has the right MD5
+            $allMd5sTheSame = true;
+            foreach(self::$filesToImport as $fileToImport) {
+                $allMd5sTheSame = $allMd5sTheSame &&
+                    (md5_file($fileToImport->getPhysicalPath()) ==
+                        $data[$md5HashOfScriptNames][$fileToImport->getScriptName()]['originalMd5']);
             }
+
+            if(!$allMd5sTheSame) {
+                $fileSetNeedsCrunching = true;
+                unlink($data[$md5HashOfScriptNames]['cachePath']);
+            }
+        }else{
+            $fileSetNeedsCrunching = true;
         }
 
-        CNCSetup::storeDataToCacheFile($data);
-    }
+        if($fileSetNeedsCrunching) {
 
-    private static function setUpFile($md5OfFile, CachingFile $file) {
-        $ug = new JSUglify();
+            //Get all the details of the data we are crushing in the format we expect
+            $constituentFilesArr = [];
+            $flatConstituentPhysicalPaths = [];
+            foreach(self::$filesToImport as $fileToImport) {
+                //TODO: Optimization: we are md5;ing twice, reduce duplication and calls
+                $constituentFilesArr[] = [
+                    'originalMd5' => md5_file($fileToImport->getPhysicalPath()),
+                    'physicalPath' => $fileToImport->getPhysicalPath()
+                ];
+                $flatConstituentPhysicalPaths[] = $fileToImport->getPhysicalPath();
+            }
 
-        $cachePath = self::$cacheDirectory . self::$JS_CACHE . $md5OfFile . ".js";
-        $cachePath = str_replace("\\", "/", $cachePath);
-        $cacheUrl = self::$cachePath . self::$JS_CACHE . $md5OfFile . ".js";
-        $ug->uglify([$file->getPhysicalPath()], $cachePath, self::getUglifyOptions());
-        return ['md5' => $md5OfFile, 'cachePath' => $cachePath, 'cacheUrl' => $cacheUrl];
+
+            $tempFile = tempnam(self::$cacheDirectory . self::$JS_TEMP_DIR_PATH, "tmpPrefixTest");
+
+            $ug = new JSUglify();
+            $ug->uglify($flatConstituentPhysicalPaths, $tempFile, self::getUglifyOptions());
+
+            //Now get the MD5 and move the file
+            $md5OfCrushedFile = md5_file($tempFile);
+            $pathOfCrushedFile = str_replace("\\", "/",
+                self::$cacheDirectory . self::$JS_CACHE_DIR_PATH . $md5OfCrushedFile . ".js"
+            );
+            rename($tempFile, $pathOfCrushedFile);
+
+            $newCrushedFileData = [
+                'cachePath' => $pathOfCrushedFile,
+                'cacheUrl' => self::$cacheWebRoot . self::$JS_CACHE_DIR_PATH . $md5OfCrushedFile . ".js",
+                'constituentFiles' => $constituentFilesArr
+            ];
+
+            $data[$md5HashOfScriptNames] = $newCrushedFileData;
+
+            CNCSetup::storeDataToCacheFile($data);
+        }
+
     }
 
 }

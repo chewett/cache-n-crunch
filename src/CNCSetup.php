@@ -7,9 +7,7 @@ class CNCSetup {
     public static function setupBaseDirs() {
         $cachePhpConfigDir = self::setupDirectories();
         $jsFileCachePath = $cachePhpConfigDir . CacheNCrunch::$JS_FILE_CACHE_DETAILS;
-        $internalCacheFile = $cachePhpConfigDir . CacheNCrunch::$INTERNAL_DETAILS_STORE;
         file_put_contents($jsFileCachePath, self::getStartOfAutoloadFile());
-        file_put_contents($internalCacheFile, self::getStartOfInternalFile());
     }
 
     private static function setupDirectories() {
@@ -30,12 +28,10 @@ class CNCSetup {
             '$JS_FILES = []; ' . PHP_EOL;
     }
 
-    private static function getStartOfInternalFile() {
-        return json_encode([
-                "crunched_files" => []
-            ], JSON_PRETTY_PRINT);
-    }
-
+    /**
+     * Take the data from the current cache and crunch autoloader and format it into the php autoloader file
+     * @param $data
+     */
     public static function storeDataToCacheFile($data) {
         $cachePhpConfigDir = self::setupDirectories();
         $jsCurrentFileCachePath = $cachePhpConfigDir . CacheNCrunch::$JS_FILE_CACHE_DETAILS;
@@ -43,7 +39,17 @@ class CNCSetup {
         $jsFile = self::getStartOfAutoloadFile();
 
         foreach($data as $scriptName => $dataElement) {
-            $jsFile .= '$JS_FILES["'.$scriptName.'"] = ["md5" => "'.$dataElement['md5'].'", "cachePath" => "'.$dataElement['cachePath'].'", "cacheUrl" => "'.$dataElement['cacheUrl'].'"];' . PHP_EOL;
+            $constituentFilesArr = [];
+            foreach($dataElement['constituentFiles'] as $fileDetails) {
+                $fixedFilePath = str_replace("\\", "/", $fileDetails['physicalPath']);
+                $constituentFilesArr[] = '["originalMd5" => "'. $fileDetails['originalMd5'] .'", "physicalPath" => "'.$fixedFilePath.'"]';
+            }
+
+
+            $jsFile .= '$JS_FILES["'.$scriptName.'"] = [';
+            $jsFile .= '"cachePath" => "'.$dataElement['cachePath'].'",';
+            $jsFile .= '"cacheUrl" => "'.$dataElement['cacheUrl'].'",';
+            $jsFile .= '"constituentFiles" => ['.implode(", ", $constituentFilesArr).']];' . PHP_EOL;
         }
         file_put_contents($jsCurrentFileCachePath, $jsFile);
     }
