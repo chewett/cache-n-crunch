@@ -14,6 +14,17 @@ class CacheNCrunchTest extends \PHPUnit_Framework_TestCase {
 
     private static $CACHE_DIR = __DIR__ . "/../build/output/cache/";
 
+    /**
+     * Provides some example options to the tests to allow for a test with and without a header file
+     * @return array
+     */
+    public function headerFileProvider() {
+        return [
+            "No header" => [null],
+            "Header file" => [__DIR__ ."/../vendor/chewett/php-uglifyjs/build/headerfile.js"]
+        ];
+    }
+
     public function setUp() {
         if(is_dir(self::$CACHE_DIR)) {
             $fs = new Filesystem();
@@ -24,7 +35,14 @@ class CacheNCrunchTest extends \PHPUnit_Framework_TestCase {
         CacheNCrunch::setDebug(false);
     }
 
-    public function testDebugModeCacheOutput() {
+    /**
+     * @dataProvider headerFileProvider
+     */
+    public function testDebugModeCacheOutput($headerFile) {
+        if($headerFile) {
+            CacheNCrunch::setUglifyHeaderFile($headerFile);
+        }
+
         CacheNCrunch::setDebug(true);
         CacheNCrunch::register("testJs", "/static/testJs.js", __DIR__ . "/../static/testJs.js");
 
@@ -34,7 +52,14 @@ class CacheNCrunchTest extends \PHPUnit_Framework_TestCase {
         );
     }
 
-    public function testNoCachePresentOutput() {
+    /**
+     * @dataProvider headerFileProvider
+     */
+    public function testNoCachePresentOutput($headerFile) {
+        if($headerFile) {
+            CacheNCrunch::setUglifyHeaderFile($headerFile);
+        }
+
         CacheNCrunch::register("testJs", "/static/testJs.js", __DIR__ . "/../static/testJs.js");
 
         $this->assertEquals(
@@ -43,12 +68,26 @@ class CacheNCrunchTest extends \PHPUnit_Framework_TestCase {
         );
     }
 
-    public function testCrunch() {
+    /**
+     * @dataProvider headerFileProvider
+     */
+    public function testCrunch($headerFile) {
+        if($headerFile) {
+            CacheNCrunch::setUglifyHeaderFile($headerFile);
+        }
+
         CacheNCrunch::register("testJs", "/static/testJs.js", __DIR__ . "/../static/testJs.js");
         CacheNCrunch::crunch();
     }
 
-    public function testCachePresentOutput() {
+    /**
+     * @dataProvider headerFileProvider
+     */
+    public function testCachePresentOutput($headerFile) {
+        if($headerFile) {
+            CacheNCrunch::setUglifyHeaderFile($headerFile);
+        }
+
         CacheNCrunch::register("testJs", "/static/testJs.js", __DIR__ . "/../static/testJs.js");
 
         $this->assertEquals(
@@ -65,7 +104,14 @@ class CacheNCrunchTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals(0, substr_count($importStatements, "testJs.js"));
     }
 
-    public function testMultiCachePresentOutput() {
+    /**
+     * @dataProvider headerFileProvider
+     */
+    public function testMultiCachePresentOutput($headerFile) {
+        if($headerFile) {
+            CacheNCrunch::setUglifyHeaderFile($headerFile);
+        }
+
         CacheNCrunch::register("testJs", "/static/testJs.js", __DIR__ . "/../static/testJs.js");
         CacheNCrunch::register("testA", "/static/testA.js", __DIR__ . "/../static/testA.js");
 
@@ -81,7 +127,14 @@ class CacheNCrunchTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals(1, substr_count($importStatements, "script src="));
     }
 
-    public function testMultiCachePresentOutputTwoCrunches() {
+    /**
+     * @dataProvider headerFileProvider
+     */
+    public function testMultiCachePresentOutputTwoCrunches($headerFile) {
+        if($headerFile) {
+            CacheNCrunch::setUglifyHeaderFile($headerFile);
+        }
+
         CacheNCrunch::register("testJs", "/static/testJs.js", __DIR__ . "/../static/testJs.js");
         CacheNCrunch::crunch();
         CacheNCrunch::removeScript("testJs");
