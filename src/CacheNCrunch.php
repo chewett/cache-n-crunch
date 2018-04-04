@@ -20,6 +20,8 @@ class CacheNCrunch
     private static $cacheDirectory = '';
     private static $cacheWebRoot = '';
 
+    /** @var string Header file to use for all uglify JS calls  */
+    private static $uglifyHeaderFile = null;
     private static $uglifyOptions = [];
 
     /** @var CachingFile[] */
@@ -60,6 +62,21 @@ class CacheNCrunch
 
     public static function setUglifyOptions($options) {
         self::$uglifyOptions = $options;
+    }
+
+    /**
+     * @return string|null
+     */
+    public static function getUglifyHeaderFile() {
+        return self::$uglifyHeaderFile;
+    }
+
+    /**
+     * Sets the file path to use for uglify js as a header file when compressing
+     * @param string|null $uglifyHeaderFile
+     */
+    public static function setUglifyHeaderFile($uglifyHeaderFile) {
+        self::$uglifyHeaderFile = $uglifyHeaderFile;
     }
 
     /**
@@ -115,6 +132,15 @@ class CacheNCrunch
         return md5(json_encode($scriptNames));
     }
 
+    /**
+     * Looks through all files that have been registered to be crushed and crush them if needed
+     *
+     * If its found that any of these files constitituent files have changed it will recreate the combined
+     * crushed file by running uglify over all of the files. If the combined files have never been crushed
+     * together then they will  be crushed.
+     *
+     * Once crushed the fact that these have been crushed is saved to a file so we know where it has been crushed
+     */
     public static function crunch() {
         if(!is_dir(self::$cacheDirectory . self::$JS_CACHE_DIR_PATH)) {
             mkdir(self::$cacheDirectory . self::$JS_CACHE_DIR_PATH, 0777, true);
@@ -152,7 +178,7 @@ class CacheNCrunch
             $constituentFilesArr = [];
             $flatConstituentPhysicalPaths = [];
             foreach(self::$filesToImport as $fileToImport) {
-                //TODO: Optimization: we are md5;ing twice, reduce duplication and calls
+                //TODO: Optimization: we are md5'ing twice, reduce duplication and calls
                 $constituentFilesArr[] = [
                     'originalMd5' => md5_file($fileToImport->getPhysicalPath()),
                     'physicalPath' => $fileToImport->getPhysicalPath()
@@ -164,7 +190,7 @@ class CacheNCrunch
             $tempFile = tempnam(self::$cacheDirectory . self::$JS_TEMP_DIR_PATH, "tmpPrefixTest");
 
             $ug = new JSUglify();
-            $ug->uglify($flatConstituentPhysicalPaths, $tempFile, self::getUglifyOptions());
+            $ug->uglify($flatConstituentPhysicalPaths, $tempFile, self::getUglifyOptions(), self::getUglifyHeaderFile());
 
             //Now get the MD5 and move the file
             $md5OfCrushedFile = md5_file($tempFile);

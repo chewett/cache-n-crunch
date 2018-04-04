@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "7721344f854dca8143ab78e5cb37fda9",
+    "content-hash": "7b6c44bd8bcee3d253812b390f300d68",
     "packages": [
         {
             "name": "chewett/php-uglifyjs",
-            "version": "v2.0.1",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/chewett/php-uglifyjs.git",
-                "reference": "a2f998af8ec255377523403f307e2f5c7d21de62"
+                "reference": "9ec48e9c8cdbebe93ad5740fef0a8b0f5b448574"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/chewett/php-uglifyjs/zipball/a2f998af8ec255377523403f307e2f5c7d21de62",
-                "reference": "a2f998af8ec255377523403f307e2f5c7d21de62",
+                "url": "https://api.github.com/repos/chewett/php-uglifyjs/zipball/9ec48e9c8cdbebe93ad5740fef0a8b0f5b448574",
+                "reference": "9ec48e9c8cdbebe93ad5740fef0a8b0f5b448574",
                 "shasum": ""
             },
             "require-dev": {
@@ -48,7 +48,7 @@
                 }
             ],
             "description": "A basic wrapper around uglifyjs for PHP",
-            "time": "2018-03-31T21:59:10+00:00"
+            "time": "2018-04-02T22:34:48+00:00"
         }
     ],
     "packages-dev": [
@@ -2430,8 +2430,10 @@
         }
     ],
     "aliases": [],
-    "minimum-stability": "stable",
-    "stability-flags": [],
+    "minimum-stability": "dev",
+    "stability-flags": {
+        "chewett/php-uglifyjs": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],
