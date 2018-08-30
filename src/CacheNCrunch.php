@@ -17,6 +17,8 @@ class CacheNCrunch
     //Stores the details of what we have cached in php form (loaded during production use)
     public static $JS_FILE_CACHE_DETAILS  = 'jsCacheFile.php';
 
+    public static $CRUNCH_ALWAYS_IN_DEV_MODE_ON_SCRIPT_IMPORT = true;
+
     private static $cacheDirectory = '';
     private static $cacheWebRoot = '';
 
@@ -83,6 +85,10 @@ class CacheNCrunch
      * When called all registered libraries will be returned with script tags linking to them
      */
     public static function getScriptImports() {
+        if(self::$CRUNCH_ALWAYS_IN_DEV_MODE_ON_SCRIPT_IMPORT && self::$debugMode) {
+            self::crunch();
+        }
+
         $stringImports = '';
         $JS_FILES = [];
         if(!self::$debugMode) {
