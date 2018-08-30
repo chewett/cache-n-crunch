@@ -42,7 +42,7 @@ class CNCSetup {
             $constituentFilesArr = [];
             foreach($dataElement['constituentFiles'] as $fileKey => $fileDetails) {
                 $fixedFilePath = str_replace("\\", "/", $fileDetails['physicalPath']);
-                $constituentFilesArr[$fileKey] = '["originalMd5" => "'. $fileDetails['originalMd5'] .'", "physicalPath" => "'.$fixedFilePath.'"]';
+                $constituentFilesArr[] = '"'.$fileKey .'" => ["originalMd5" => "'. $fileDetails['originalMd5'] .'", "physicalPath" => "'.$fixedFilePath.'"]';
             }
 
 
