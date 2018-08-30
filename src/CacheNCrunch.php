@@ -167,7 +167,7 @@ class CacheNCrunch
             foreach(self::$filesToImport as $fileToImport) {
                 $allMd5sTheSame = $allMd5sTheSame &&
                     (md5_file($fileToImport->getPhysicalPath()) ==
-                        $data[$md5HashOfScriptNames][$fileToImport->getScriptName()]['originalMd5']);
+                        $data[$md5HashOfScriptNames]['constituentFiles'][$fileToImport->getScriptName()]['originalMd5']);
             }
 
             if(!$allMd5sTheSame) {
@@ -185,7 +185,7 @@ class CacheNCrunch
             $flatConstituentPhysicalPaths = [];
             foreach(self::$filesToImport as $fileToImport) {
                 //TODO: Optimization: we are md5'ing twice, reduce duplication and calls
-                $constituentFilesArr[] = [
+                $constituentFilesArr[$fileToImport->getScriptName()] = [
                     'originalMd5' => md5_file($fileToImport->getPhysicalPath()),
                     'physicalPath' => $fileToImport->getPhysicalPath()
                 ];
