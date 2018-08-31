@@ -28,6 +28,8 @@ class CacheNCrunch
 
     /** @var CachingFile[] */
     private static $filesToImport = [];
+    /** @var array */
+    private static $fileImportOrder = [];
     /** @var bool */
     private static $debugMode = false;
 
@@ -47,6 +49,7 @@ class CacheNCrunch
      * @param string $name Reference name of the file
      */
     public static function register($scriptName, $publicPath, $physicalPath) {
+        self::$fileImportOrder[] = $scriptName;
         self::$filesToImport[$scriptName] = new CachingFile($scriptName, $publicPath, $physicalPath);
     }
 
@@ -105,7 +108,9 @@ class CacheNCrunch
         }else{
             //Otherwise create the X import statements needed to import the raw JS
             $stringImports = [];
-            foreach(self::$filesToImport as $scriptName => $cachingFile) {
+            //Force the order of the imports
+            foreach(self::$fileImportOrder as $scriptName) {
+                $cachingFile = self::$filesToImport[$scriptName];
                 $stringImports[] = CNCHtmlHelper::createJsImportStatement($cachingFile->getPublicPath());
             }
             return implode("", $stringImports);
@@ -183,7 +188,9 @@ class CacheNCrunch
             //Get all the details of the data we are crushing in the format we expect
             $constituentFilesArr = [];
             $flatConstituentPhysicalPaths = [];
-            foreach(self::$filesToImport as $fileToImport) {
+            //Force the order of crunching files
+            foreach(self::$fileImportOrder as $scriptName) {
+                $fileToImport = self::$filesToImport[$scriptName];
                 //TODO: Optimization: we are md5'ing twice, reduce duplication and calls
                 $constituentFilesArr[$fileToImport->getScriptName()] = [
                     'originalMd5' => md5_file($fileToImport->getPhysicalPath()),
