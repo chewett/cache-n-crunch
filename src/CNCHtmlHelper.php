@@ -22,7 +22,7 @@ class CNCHtmlHelper
     }
 
     public static function createCssImportStatement($import) {
-        return "<link href='{$import}'  rel='stylesheet'>";
+        return "<link href='{$import}' rel='stylesheet'>";
     }
 
 }
