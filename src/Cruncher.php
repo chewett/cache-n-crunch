@@ -146,8 +146,8 @@ class Cruncher {
         }
 
         if($cssFileSetNeedsCrunching) {
-            $flatConstituentPhysicalPaths = self::getPhysicalPathsOfImports(CacheNCrunch::getCssFilesToImport(), $cssFilesToImport);
-            $constituentFilesArr = self::getFullDetailsOfFilesToImport(CacheNCrunch::getCssFilesToImport(), $cssFilesToImport);
+            $flatConstituentPhysicalPaths = self::getPhysicalPathsOfImports(CacheNCrunch::getCssFileImportOrder(), $cssFilesToImport);
+            $constituentFilesArr = self::getFullDetailsOfFilesToImport(CacheNCrunch::getCssFileImportOrder(), $cssFilesToImport);
 
             $tempFile = tempnam(CacheNCrunch::getCacheDirectory() . CacheNCrunch::$TEMP_CRUNCH_DIR_PATH, "tmpPrefixTest");
 
