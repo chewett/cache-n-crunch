@@ -14,7 +14,7 @@ class CacheNCrunch
     public static $CSS_CACHE_DIR_OUTPUT = 'static/css/';
     public static $JS_CACHE_DIR_OUTPUT = 'static/js/';
 
-    public static $CACHE_FILE_DIR = 'CacheNCrunch';
+    public static $CACHE_FILE_DIR = 'CacheNCrunch/';
     public static $TEMP_CRUNCH_DIR_PATH = 'crunchTmp/';
     //Stores the details of what we have cached in php form
     public static $FILE_CACHE_DETAILS  = 'cacheFile.php';
