@@ -18,8 +18,8 @@ class CNCSetupTest extends \PHPUnit_Framework_TestCase {
         CacheNCrunch::setUpCacheDirectory($cacheDir, '/build/output/cache/');
         CacheNCrunch::setDebug(false);
 
-        $this->assertFileExists(CacheNCrunch::getCacheDirectory() . CacheNCrunch::$JS_LOADING_FILES);
-        $this->assertFileExists(CacheNCrunch::getCacheDirectory() . CacheNCrunch::$JS_LOADING_FILES . CacheNCrunch::$JS_FILE_CACHE_DETAILS);
+        $this->assertFileExists(CacheNCrunch::getCacheDirectory() . CacheNCrunch::$CACHE_FILE_DIR);
+        $this->assertFileExists(CacheNCrunch::getCacheDirectory() . CacheNCrunch::$CACHE_FILE_DIR . CacheNCrunch::$FILE_CACHE_DETAILS);
 
     }
 
