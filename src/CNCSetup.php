@@ -6,8 +6,8 @@ class CNCSetup {
 
     public static function setupBaseDirs() {
         $cachePhpConfigDir = self::setupDirectories();
-        $jsFileCachePath = $cachePhpConfigDir . CacheNCrunch::$JS_FILE_CACHE_DETAILS;
-        file_put_contents($jsFileCachePath, self::getStartOfAutoloadFile());
+        $cacheFilePath = $cachePhpConfigDir . CacheNCrunch::$FILE_CACHE_DETAILS;
+        file_put_contents($cacheFilePath, self::getStartOfAutoloadFile());
     }
 
     private static function setupDirectories() {
@@ -15,7 +15,7 @@ class CNCSetup {
             mkdir(CacheNCrunch::getCacheDirectory(), 0777, true);
         }
 
-        $cachePhpConfigDir = CacheNCrunch::getCacheDirectory() . CacheNCrunch::$JS_LOADING_FILES;
+        $cachePhpConfigDir = CacheNCrunch::getCacheDirectory() . CacheNCrunch::$CACHE_FILE_DIR;
         if(!is_dir($cachePhpConfigDir)) {
             mkdir($cachePhpConfigDir, 0777, true);
         }
@@ -25,33 +25,49 @@ class CNCSetup {
     private static function getStartOfAutoloadFile() {
         return
             '<?php ' . PHP_EOL .
-            '$JS_FILES = []; ' . PHP_EOL;
+            '$JS_FILES = []; ' . PHP_EOL .
+            '$CSS_FILES = []; ' . PHP_EOL
+            ;
     }
 
     /**
      * Take the data from the current cache and crunch autoloader and format it into the php autoloader file
-     * @param $data
+     * @param $jsData
      */
-    public static function storeDataToCacheFile($data) {
+    public static function storeDataToCacheFile($jsData, $cssData) {
         $cachePhpConfigDir = self::setupDirectories();
-        $jsCurrentFileCachePath = $cachePhpConfigDir . CacheNCrunch::$JS_FILE_CACHE_DETAILS;
-        $jsCurrentFileCachePath = str_replace("\\", "/", $jsCurrentFileCachePath);
-        $jsFile = self::getStartOfAutoloadFile();
+        $currentFileCachePath = $cachePhpConfigDir . CacheNCrunch::$FILE_CACHE_DETAILS;
+        $currentFileCachePath = str_replace("\\", "/", $currentFileCachePath);
+        $cacheFile = self::getStartOfAutoloadFile();
 
-        foreach($data as $scriptName => $dataElement) {
+        foreach($jsData as $scriptName => $dataElement) {
             $constituentFilesArr = [];
             foreach($dataElement['constituentFiles'] as $fileKey => $fileDetails) {
                 $fixedFilePath = str_replace("\\", "/", $fileDetails['physicalPath']);
                 $constituentFilesArr[] = '"'.$fileKey .'" => ["originalMd5" => "'. $fileDetails['originalMd5'] .'", "physicalPath" => "'.$fixedFilePath.'"]';
             }
 
-
-            $jsFile .= '$JS_FILES["'.$scriptName.'"] = [';
-            $jsFile .= '"cachePath" => "'.$dataElement['cachePath'].'",';
-            $jsFile .= '"cacheUrl" => "'.$dataElement['cacheUrl'].'",';
-            $jsFile .= '"constituentFiles" => ['.implode(", ", $constituentFilesArr).']];' . PHP_EOL;
+            $cacheFile .= '$JS_FILES["'.$scriptName.'"] = [';
+            $cacheFile .= '"cachePath" => "'.$dataElement['cachePath'].'",';
+            $cacheFile .= '"cacheUrl" => "'.$dataElement['cacheUrl'].'",';
+            $cacheFile .= '"constituentFiles" => ['.implode(", ", $constituentFilesArr).']];' . PHP_EOL;
         }
-        file_put_contents($jsCurrentFileCachePath, $jsFile);
+
+        foreach($cssData as $scriptName => $dataElement) {
+            $constituentFilesArr = [];
+            foreach($dataElement['constituentFiles'] as $fileKey => $fileDetails) {
+                $fixedFilePath = str_replace("\\", "/", $fileDetails['physicalPath']);
+                $constituentFilesArr[] = '"'.$fileKey .'" => ["originalMd5" => "'. $fileDetails['originalMd5'] .'", "physicalPath" => "'.$fixedFilePath.'"]';
+            }
+
+            $cacheFile .= '$CSS_FILES["'.$scriptName.'"] = [';
+            $cacheFile .= '"cachePath" => "'.$dataElement['cachePath'].'",';
+            $cacheFile .= '"cacheUrl" => "'.$dataElement['cacheUrl'].'",';
+            $cacheFile .= '"constituentFiles" => ['.implode(", ", $constituentFilesArr).']];' . PHP_EOL;
+        }
+
+
+        file_put_contents($currentFileCachePath, $cacheFile);
     }
 
 }

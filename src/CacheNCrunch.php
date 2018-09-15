@@ -11,11 +11,13 @@ use Chewett\UglifyJS\JSUglify;
 class CacheNCrunch
 {
 
-    public static $JS_CACHE_DIR_PATH = 'static/js/';
-    public static $JS_LOADING_FILES = 'CacheNCrunch/js/';
-    public static $JS_TEMP_DIR_PATH = 'jsTmp/';
-    //Stores the details of what we have cached in php form (loaded during production use)
-    public static $JS_FILE_CACHE_DETAILS  = 'jsCacheFile.php';
+    public static $CSS_CACHE_DIR_OUTPUT = 'static/css/';
+    public static $JS_CACHE_DIR_OUTPUT = 'static/js/';
+
+    public static $CACHE_FILE_DIR = 'CacheNCrunch';
+    public static $TEMP_CRUNCH_DIR_PATH = 'crunchTmp/';
+    //Stores the details of what we have cached in php form
+    public static $FILE_CACHE_DETAILS  = 'cacheFile.php';
 
     public static $CRUNCH_ALWAYS_IN_DEV_MODE_ON_SCRIPT_IMPORT = true;
 
@@ -23,13 +25,21 @@ class CacheNCrunch
     private static $cacheWebRoot = '';
 
     /** @var string Header file to use for all uglify JS calls  */
-    private static $uglifyHeaderFile = null;
-    private static $uglifyOptions = [];
+    private static $uglifyJsHeaderFile = null;
+    private static $uglifyJsOptions = [];
+    /** @var string Header file to use for all uglify css calls */
+    private static $uglifyCssHeaderFile = null;
+    private static $uglifyCssOptions = [];
 
     /** @var CachingFile[] */
-    private static $filesToImport = [];
+    private static $jsFilesToImport = [];
+    /** @var CachingFile[] */
+    private static $cssFilesToImport = [];
     /** @var array */
-    private static $fileImportOrder = [];
+    private static $jsFileImportOrder = [];
+    /** @var array */
+    private static $cssFileImportOrder = [];
+
     /** @var bool */
     private static $debugMode = false;
 
@@ -44,44 +54,99 @@ class CacheNCrunch
     }
 
     /**
+     * @return CachingFile[]
+     */
+    public static function getJsFilesToImport() {
+        return self::$jsFilesToImport;
+    }
+
+    /**
+     * @return CachingFile[]
+     */
+    public static function getCssFilesToImport() {
+        return self::$cssFilesToImport;
+    }
+
+    /**
+     * @return array
+     */
+    public static function getJsFileImportOrder() {
+        return self::$jsFileImportOrder;
+    }
+
+    /**
+     * @return array
+     */
+    public static function getCssFileImportOrder() {
+        return self::$cssFileImportOrder;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getCacheWebRoot() {
+        return self::$cacheWebRoot;
+    }
+
+
+
+
+    /**
      * Registers the javascript file with the CacheNCrunch library
      * @param string $path Path to the Javascript file to be registered with the library
      * @param string $name Reference name of the file
      */
-    public static function register($scriptName, $publicPath, $physicalPath) {
-        self::$fileImportOrder[] = $scriptName;
-        self::$filesToImport[$scriptName] = new CachingFile($scriptName, $publicPath, $physicalPath);
+    public static function registerJsFile($scriptName, $publicPath, $physicalPath) {
+        self::$jsFileImportOrder[] = $scriptName;
+        self::$jsFilesToImport[$scriptName] = new CachingFile($scriptName, $publicPath, $physicalPath);
     }
 
-    public static function removeScript($scriptName) {
-        unset(self::$filesToImport[$scriptName]);
+    public static function registerCssFile($scriptName, $publicPath, $physicalPath) {
+        self::$cssFileImportOrder[] = $scriptName;
+        self::$cssFilesToImport[$scriptName] = new CachingFile($scriptName, $publicPath, $physicalPath);
     }
 
     public static function setDebug($debug) {
         self::$debugMode = $debug;
     }
 
-    public static function getUglifyOptions() {
-        return self::$uglifyOptions;
+    public static function getUglifyJsOptions() {
+        return self::$uglifyJsOptions;
     }
 
-    public static function setUglifyOptions($options) {
-        self::$uglifyOptions = $options;
+    public static function setUglifyJsOptions($options) {
+        self::$uglifyJsOptions = $options;
+    }
+
+    public static function getUglifyCssOptions() {
+        return self::$uglifyCssOptions;
+    }
+
+    public static function setUglifyCssOptions($uglifyCssOptions) {
+        self::$uglifyCssOptions = $uglifyCssOptions;
     }
 
     /**
      * @return string|null
      */
-    public static function getUglifyHeaderFile() {
-        return self::$uglifyHeaderFile;
+    public static function getUglifyJsHeaderFile() {
+        return self::$uglifyJsHeaderFile;
+    }
+
+    public static function getUglifyCssHeaderFile() {
+        return self::$uglifyCssHeaderFile;
     }
 
     /**
      * Sets the file path to use for uglify js as a header file when compressing
-     * @param string|null $uglifyHeaderFile
+     * @param string|null $uglifyJsHeaderFile
      */
-    public static function setUglifyHeaderFile($uglifyHeaderFile) {
-        self::$uglifyHeaderFile = $uglifyHeaderFile;
+    public static function setUglifyJsHeaderFile($uglifyJsHeaderFile) {
+        self::$uglifyJsHeaderFile = $uglifyJsHeaderFile;
+    }
+
+    public static function setUglifyCssHeaderFile($uglifyCssHeaderFile) {
+        self::$uglifyCssHeaderFile = $uglifyCssHeaderFile;
     }
 
     /**
@@ -89,36 +154,53 @@ class CacheNCrunch
      */
     public static function getScriptImports() {
         if(self::$CRUNCH_ALWAYS_IN_DEV_MODE_ON_SCRIPT_IMPORT && self::$debugMode) {
-            self::crunch();
+            Cruncher::crunch();
         }
 
         $stringImports = '';
         $JS_FILES = [];
+        $CSS_FILES = [];
         if(!self::$debugMode) {
             //Import the crunched list of files we know about
-            require self::$cacheDirectory . self::$JS_LOADING_FILES . self::$JS_FILE_CACHE_DETAILS;
+            require self::$cacheDirectory . self::$CACHE_FILE_DIR . self::$FILE_CACHE_DETAILS;
         }
 
-        $currentImportsHashString = self::getHashOfCurrentImports();
+        $currentJsImportsHashString = self::getHashOfCurrentJsImports();
 
         //If we are not in debug mode and we have this file already crunched then link to the crunched file
-        if(!self::$debugMode && isset($JS_FILES[$currentImportsHashString])) {
-            return CNCHtmlHelper::createJsImportStatement($JS_FILES[$currentImportsHashString]['cacheUrl']);
-
+        if(!self::$debugMode && isset($JS_FILES[$currentJsImportsHashString])) {
+            $jsFileImportString = CNCHtmlHelper::createJsImportStatement($JS_FILES[$currentJsImportsHashString]['cacheUrl']);
         }else{
             //Otherwise create the X import statements needed to import the raw JS
             $stringImports = [];
             //Force the order of the imports
-            foreach(self::$fileImportOrder as $scriptName) {
-                $cachingFile = self::$filesToImport[$scriptName];
+            foreach(self::$jsFileImportOrder as $scriptName) {
+                $cachingFile = self::$jsFilesToImport[$scriptName];
                 $stringImports[] = CNCHtmlHelper::createJsImportStatement($cachingFile->getPublicPath());
             }
-            return implode("", $stringImports);
+            $jsFileImportString = implode("", $stringImports);
         }
+
+        $currentCssImportsHashString = self::getHashOfCurrentCssImports();
+        //If we are not in debug mode and we have this file already crunched then link to the crunched file
+        if(!self::$debugMode && isset($JS_FILES[$currentJsImportsHashString])) {
+            $cssFileImportString = CNCHtmlHelper::createCssImportStatement($CSS_FILES[$currentCssImportsHashString]['cacheUrl']);
+        }else{
+            //Otherwise create the X import statements needed to import the raw CSS
+            $stringImports = [];
+            //Force the order of the imports
+            foreach(self::$cssFileImportOrder as $scriptName) {
+                $cachingFile = self::$cssFilesToImport[$scriptName];
+                $stringImports[] = CNCHtmlHelper::createCssImportStatement($cachingFile->getPublicPath());
+            }
+            $cssFileImportString = implode("", $stringImports);
+        }
+
+        return $cssFileImportString . $jsFileImportString;
     }
 
     private static function checkCacheDirectory() {
-        if(is_readable(self::$cacheDirectory . self::$JS_LOADING_FILES . self::$JS_FILE_CACHE_DETAILS)) {
+        if(is_readable(self::$cacheDirectory . self::$CACHE_FILE_DIR . self::$FILE_CACHE_DETAILS)) {
             return;
         }
         CNCSetup::setupBaseDirs();
@@ -129,100 +211,12 @@ class CacheNCrunch
      * the cache object that will be created for this specific file set
      * @return string Hash string representing the cache object for the file set
      */
-    private static function getHashOfCurrentImports() {
-        //Get all the script names I want to import
-        $scriptNames = [];
-        foreach(self::$filesToImport as $fileToImport) {
-            $scriptNames[] = $fileToImport->getScriptName();
-        }
-
-        //This means that whatever order the scripts were registered if they are the same set it will be the same
-        sort($scriptNames);
-
-        //Now we get the hash of the script names, this forms the unique hash used for this combination
-        return md5(json_encode($scriptNames));
+    public static function getHashOfCurrentJsImports() {
+        return md5(json_encode(self::$jsFileImportOrder));
     }
 
-    /**
-     * Looks through all files that have been registered to be crushed and crush them if needed
-     *
-     * If its found that any of these files constitituent files have changed it will recreate the combined
-     * crushed file by running uglify over all of the files. If the combined files have never been crushed
-     * together then they will  be crushed.
-     *
-     * Once crushed the fact that these have been crushed is saved to a file so we know where it has been crushed
-     */
-    public static function crunch() {
-        if(!is_dir(self::$cacheDirectory . self::$JS_CACHE_DIR_PATH)) {
-            mkdir(self::$cacheDirectory . self::$JS_CACHE_DIR_PATH, 0777, true);
-        }
-
-        $data = [];
-        require self::$cacheDirectory . self::$JS_LOADING_FILES . self::$JS_FILE_CACHE_DETAILS;
-        if(isset($JS_FILES)) {
-            $data = $JS_FILES;
-        }
-
-        $md5HashOfScriptNames = self::getHashOfCurrentImports();
-        $fileSetNeedsCrunching = false;
-
-        if(isset($data[$md5HashOfScriptNames])) {
-            //If we already have this hash, lets check each file has the right MD5
-            $allMd5sTheSame = true;
-            foreach(self::$filesToImport as $fileToImport) {
-                $allMd5sTheSame = $allMd5sTheSame &&
-                    (md5_file($fileToImport->getPhysicalPath()) ==
-                        $data[$md5HashOfScriptNames]['constituentFiles'][$fileToImport->getScriptName()]['originalMd5']);
-            }
-
-            if(!$allMd5sTheSame) {
-                $fileSetNeedsCrunching = true;
-                unlink($data[$md5HashOfScriptNames]['cachePath']);
-            }
-        }else{
-            $fileSetNeedsCrunching = true;
-        }
-
-        if($fileSetNeedsCrunching) {
-
-            //Get all the details of the data we are crushing in the format we expect
-            $constituentFilesArr = [];
-            $flatConstituentPhysicalPaths = [];
-            //Force the order of crunching files
-            foreach(self::$fileImportOrder as $scriptName) {
-                $fileToImport = self::$filesToImport[$scriptName];
-                //TODO: Optimization: we are md5'ing twice, reduce duplication and calls
-                $constituentFilesArr[$fileToImport->getScriptName()] = [
-                    'originalMd5' => md5_file($fileToImport->getPhysicalPath()),
-                    'physicalPath' => $fileToImport->getPhysicalPath()
-                ];
-                $flatConstituentPhysicalPaths[] = $fileToImport->getPhysicalPath();
-            }
-
-
-            $tempFile = tempnam(self::$cacheDirectory . self::$JS_TEMP_DIR_PATH, "tmpPrefixTest");
-
-            $ug = new JSUglify();
-            $ug->uglify($flatConstituentPhysicalPaths, $tempFile, self::getUglifyOptions(), self::getUglifyHeaderFile());
-
-            //Now get the MD5 and move the file
-            $md5OfCrushedFile = md5_file($tempFile);
-            $pathOfCrushedFile = str_replace("\\", "/",
-                self::$cacheDirectory . self::$JS_CACHE_DIR_PATH . $md5OfCrushedFile . ".js"
-            );
-            rename($tempFile, $pathOfCrushedFile);
-
-            $newCrushedFileData = [
-                'cachePath' => $pathOfCrushedFile,
-                'cacheUrl' => self::$cacheWebRoot . self::$JS_CACHE_DIR_PATH . $md5OfCrushedFile . ".js",
-                'constituentFiles' => $constituentFilesArr
-            ];
-
-            $data[$md5HashOfScriptNames] = $newCrushedFileData;
-
-            CNCSetup::storeDataToCacheFile($data);
-        }
-
+    public static function getHashOfCurrentCssImports() {
+        return md5(json_encode(self::$cssFileImportOrder));
     }
 
 }

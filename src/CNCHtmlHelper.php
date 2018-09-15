@@ -21,4 +21,8 @@ class CNCHtmlHelper
         return "<script src='{$import}'></script>";
     }
 
+    public static function createCssImportStatement($import) {
+        return "<style src='{$import}' />";
+    }
+
 }
