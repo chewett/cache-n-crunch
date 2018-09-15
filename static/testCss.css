@@ -1,0 +1,18 @@
+
+body {
+    color: pink;
+}
+
+.big-text {
+    font-size: 20em;
+    font-weight: bold;
+}
+
+.console-text {
+    font-family: monospace;
+    color: green;
+    background-color: black;
+}
+
+
+
