@@ -10,16 +10,16 @@ namespace Chewett\CacheNCrunch;
  * @package Chewett\CacheNCrunch
  * @author Christopher Hewett <chewett@hotmail.co.uk>
  */
-class CacheNCrunchLogger {
+class CNCLogger {
 
-    private static $debugLog = [];
+    private $debugLog = [];
 
-    public static function log($logString) {
-        self::$debugLog[] = $logString;
+    public function log($logString) {
+        $this->debugLog[] = $logString;
     }
 
-    public static function getLog() {
-        return self::$debugLog;
+    public function getLog() {
+        return $this->debugLog;
     }
 
 }
