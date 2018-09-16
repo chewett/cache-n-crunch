@@ -1,14 +1,12 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: chewe
- * Date: 02/04/2018
- * Time: 12:19 AM
- */
 
 namespace Chewett\CacheNCrunch;
 
-
+/**
+ * Class CNCHtmlHelper
+ * @package Chewett\CacheNCrunch
+ * @author Christopher Hewett <chewett@hotmail.co.uk>
+ */
 class CNCHtmlHelper
 {
 
