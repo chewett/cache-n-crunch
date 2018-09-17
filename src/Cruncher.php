@@ -12,10 +12,13 @@ use Chewett\UglifyJS\JSUglify;
  */
 class Cruncher {
 
-    private static function createDirs() {
+    /**
+     * @param CNCSettings $cncSettings
+     */
+    private static function createDirs($cncSettings) {
         $dirsToCreate = [
-            CacheNCrunch::getCacheDirectory() . CacheNCrunch::$JS_CACHE_DIR_OUTPUT,
-            CacheNCrunch::getCacheDirectory() . CacheNCrunch::$CSS_CACHE_DIR_OUTPUT
+            $cncSettings->getCacheDirectory() . $cncSettings->getJsCacheDirOutput(),
+            $cncSettings->getCacheDirectory() . $cncSettings->getCssCacheDirOutput()
         ];
 
         foreach($dirsToCreate as $dirToCreate) {
@@ -98,12 +101,13 @@ class Cruncher {
      * together then they will  be crushed.
      *
      * Once crushed the fact that these have been crushed is saved to a file so we know where it has been crushed
+     * @param CNCSettings $cncSettings
      */
-    public static function crunch() {
-        self::createDirs();
+    public static function crunch($cncSettings, $jsFileImportOrder, $jsFilesToImport, $cssFileImportOrder, $cssFilesToImport) {
+        self::createDirs($cncSettings);
 
         $jsData = []; $cssData = [];
-        require CacheNCrunch::getCacheDirectory() . CacheNCrunch::$CACHE_FILE_DIR . CacheNCrunch::$FILE_CACHE_DETAILS;
+        require $cncSettings->getCacheFileLocation();
         if(isset($JS_FILES)) {
             $jsData = $JS_FILES;
         }
@@ -111,69 +115,76 @@ class Cruncher {
             $cssData = $CSS_FILES;
         }
 
-        $md5HashOfJsScriptNames = CacheNCrunch::getHashOfCurrentJsImports();
-        $jsFilesToImport = CacheNCrunch::getJsFilesToImport();
+        $md5HashOfJsScriptNames = self::getHashOfImports($jsFileImportOrder);
         $jsFileSetNeedsCrunching = self::doFilesNeedCrunching($jsData, $jsFilesToImport, $md5HashOfJsScriptNames);
 
-        $md5HashOfCssScriptNames = CacheNCrunch::getHashOfCurrentCssImports();
-        $cssFilesToImport = CacheNCrunch::getCssFilesToImport();
+        $md5HashOfCssScriptNames = self::getHashOfImports($cssFileImportOrder);
         $cssFileSetNeedsCrunching = self::doFilesNeedCrunching($cssData, $cssFilesToImport, $md5HashOfCssScriptNames);
 
         if($jsFileSetNeedsCrunching) {
-            $flatConstituentPhysicalPaths = self::getPhysicalPathsOfImports(CacheNCrunch::getJsFileImportOrder(), $jsFilesToImport);
-            $constituentFilesArr = self::getFullDetailsOfFilesToImport(CacheNCrunch::getJsFileImportOrder(), $jsFilesToImport);
+            $flatConstituentPhysicalPaths = self::getPhysicalPathsOfImports($jsFileImportOrder, $jsFilesToImport);
+            $constituentFilesArr = self::getFullDetailsOfFilesToImport($jsFileImportOrder, $jsFilesToImport);
 
-            $tempFile = tempnam(CacheNCrunch::getCacheDirectory() . CacheNCrunch::$TEMP_CRUNCH_DIR_PATH, "tmpPrefixTest");
+            $tempFile = tempnam($cncSettings->getCacheDirectory() . $cncSettings->getTempCacheDir(), "tmpJsPrefix");
 
             $ugJs = new JSUglify();
-            $ugJs->uglify($flatConstituentPhysicalPaths, $tempFile, CacheNCrunch::getUglifyJsOptions(), CacheNCrunch::getUglifyJsHeaderFile());
+            $ugJs->uglify($flatConstituentPhysicalPaths, $tempFile, $cncSettings->getUglifyJsOptions(), $cncSettings->getUglifyJsHeaderFile());
 
             //Now get the MD5 and move the file
             $md5OfCrushedFile = md5_file($tempFile);
             $pathOfCrushedFile = str_replace("\\", "/",
-                CacheNCrunch::getCacheDirectory() . CacheNCrunch::$JS_CACHE_DIR_OUTPUT . $md5OfCrushedFile . ".js"
+                $cncSettings->getCacheDirectory() . $cncSettings->getJsCacheDirOutput() . $md5OfCrushedFile . ".js"
             );
             rename($tempFile, $pathOfCrushedFile);
 
             $newCrushedFileData = [
                 'cachePath' => $pathOfCrushedFile,
-                'cacheUrl' => CacheNCrunch::getCacheWebRoot() . CacheNCrunch::$JS_CACHE_DIR_OUTPUT . $md5OfCrushedFile . ".js",
+                'cacheUrl' => $cncSettings->getCacheWebRoot() . $cncSettings->getJsCacheDirOutput() . $md5OfCrushedFile . ".js",
                 'constituentFiles' => $constituentFilesArr
             ];
 
-            $md5HashOfJsScriptNames = CacheNCrunch::getHashOfCurrentJsImports();
+            $md5HashOfJsScriptNames = self::getHashOfImports($jsFileImportOrder);
             $jsData[$md5HashOfJsScriptNames] = $newCrushedFileData;
         }
 
         if($cssFileSetNeedsCrunching) {
-            $flatConstituentPhysicalPaths = self::getPhysicalPathsOfImports(CacheNCrunch::getCssFileImportOrder(), $cssFilesToImport);
-            $constituentFilesArr = self::getFullDetailsOfFilesToImport(CacheNCrunch::getCssFileImportOrder(), $cssFilesToImport);
+            $flatConstituentPhysicalPaths = self::getPhysicalPathsOfImports($cssFileImportOrder, $cssFilesToImport);
+            $constituentFilesArr = self::getFullDetailsOfFilesToImport($cssFileImportOrder, $cssFilesToImport);
 
-            $tempFile = tempnam(CacheNCrunch::getCacheDirectory() . CacheNCrunch::$TEMP_CRUNCH_DIR_PATH, "tmpPrefixTest");
+            $tempFile = tempnam($cncSettings->getCacheDirectory() . $cncSettings->getTempCacheDir(), "tmpPrefixTest");
 
             $ugCss = new CSSUglify();
-            $ugCss->uglify($flatConstituentPhysicalPaths, $tempFile, CacheNCrunch::getUglifyCssOptions(), CacheNCrunch::getUglifyCssHeaderFile());
+            $ugCss->uglify($flatConstituentPhysicalPaths, $tempFile, $cncSettings->getUglifyCssOptions(), $cncSettings->getUglifyCssHeaderFile());
 
             //Now get the MD5 and move the file
             $md5OfCrushedFile = md5_file($tempFile);
             $pathOfCrushedFile = str_replace("\\", "/",
-                CacheNCrunch::getCacheDirectory() . CacheNCrunch::$CSS_CACHE_DIR_OUTPUT . $md5OfCrushedFile . ".css"
+                $cncSettings->getCacheDirectory() . $cncSettings->getCssCacheDirOutput() . $md5OfCrushedFile . ".css"
             );
             rename($tempFile, $pathOfCrushedFile);
 
             $newCrushedFileData = [
                 'cachePath' => $pathOfCrushedFile,
-                'cacheUrl' => CacheNCrunch::getCacheWebRoot() . CacheNCrunch::$CSS_CACHE_DIR_OUTPUT . $md5OfCrushedFile . ".css",
+                'cacheUrl' => $cncSettings->getCacheWebRoot() . $cncSettings->getCssCacheDirOutput() . $md5OfCrushedFile . ".css",
                 'constituentFiles' => $constituentFilesArr
             ];
 
-            $md5HashOfCssScriptNames = CacheNCrunch::getHashOfCurrentCssImports();
+            $md5HashOfCssScriptNames = self::getHashOfImports($cssFileImportOrder);
             $cssData[$md5HashOfCssScriptNames] = $newCrushedFileData;
         }
 
         if($jsFileSetNeedsCrunching || $cssFileSetNeedsCrunching) {
-            CNCSetup::storeDataToCacheFile($jsData, $cssData);
+            CNCSetup::storeDataToCacheFile($cncSettings, $jsData, $cssData);
         }
+    }
+
+    /**
+     * This loops through the list of imports and generates the specific hash representing
+     * the cache object that will be created for this specific file set
+     * @return string Hash string representing the cache object for the file set
+     */
+    public static function getHashOfImports($importList) {
+        return md5(json_encode($importList));
     }
 
 }

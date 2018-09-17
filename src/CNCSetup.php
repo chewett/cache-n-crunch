@@ -4,18 +4,25 @@ namespace Chewett\CacheNCrunch;
 
 class CNCSetup {
 
-    public static function setupBaseDirs() {
-        $cachePhpConfigDir = self::setupDirectories();
-        $cacheFilePath = $cachePhpConfigDir . CacheNCrunch::$FILE_CACHE_DETAILS;
+    /**
+     * @param CNCSettings $cncSetting
+     */
+    public static function setupBaseDirs($cncSetting) {
+        if(is_readable($cncSetting->getCacheDirectory() . $cncSetting->getCacheFileDir() . $cncSetting->getCacheFileFilename())) {
+            return;
+        }
+
+        $cachePhpConfigDir = self::setupDirectories($cncSetting->getCacheDirectory(), $cncSetting->getCacheFileDir());
+        $cacheFilePath = $cachePhpConfigDir . $cncSetting->getCacheFileFilename();
         file_put_contents($cacheFilePath, self::getStartOfAutoloadFile());
     }
 
-    private static function setupDirectories() {
-        if(!is_dir(CacheNCrunch::getCacheDirectory())) {
-            mkdir(CacheNCrunch::getCacheDirectory(), 0777, true);
+    private static function setupDirectories($cacheDirectory, $cacheFileDir) {
+        if(!is_dir($cacheDirectory)) {
+            mkdir($cacheDirectory, 0777, true);
         }
 
-        $cachePhpConfigDir = CacheNCrunch::getCacheDirectory() . CacheNCrunch::$CACHE_FILE_DIR;
+        $cachePhpConfigDir = $cacheDirectory . $cacheFileDir;
         if(!is_dir($cachePhpConfigDir)) {
             mkdir($cachePhpConfigDir, 0777, true);
         }
@@ -32,11 +39,13 @@ class CNCSetup {
 
     /**
      * Take the data from the current cache and crunch autoloader and format it into the php autoloader file
-     * @param $jsData
+     * @param CNCSettings $cncSettings
+     * @param array $jsData
+     * @param array $cssData
      */
-    public static function storeDataToCacheFile($jsData, $cssData) {
-        $cachePhpConfigDir = self::setupDirectories();
-        $currentFileCachePath = $cachePhpConfigDir . CacheNCrunch::$FILE_CACHE_DETAILS;
+    public static function storeDataToCacheFile($cncSettings, $jsData, $cssData) {
+        $cachePhpConfigDir = self::setupDirectories($cncSettings->getCacheDirectory(), $cncSettings->getCacheFileDir());
+        $currentFileCachePath = $cachePhpConfigDir . $cncSettings->getCacheFileFilename();
         $currentFileCachePath = str_replace("\\", "/", $currentFileCachePath);
         $cacheFile = self::getStartOfAutoloadFile();
 
