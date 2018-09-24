@@ -132,7 +132,7 @@ class CacheNCrunch
      */
     public function getScriptImports() {
         if($this->cncSettings->isCrunchAlwaysOnDevMode() && $this->cncSettings->isDebugMode()) {
-            Cruncher::crunch($this->cncSettings);
+            $this->crunch();
         }
 
         $stringImports = '';
@@ -175,6 +175,10 @@ class CacheNCrunch
         }
 
         return $cssFileImportString . $jsFileImportString;
+    }
+
+    public function crunch() {
+        Cruncher::crunch($this->cncSettings, $this->jsFileImportOrder, $this->jsFilesToImport, $this->cssFileImportOrder, $this->cssFilesToImport);
     }
 
     private function checkCacheDirectory() {
