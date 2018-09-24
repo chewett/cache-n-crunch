@@ -1,6 +1,7 @@
 <?php
 
 namespace Chewett\CacheNCrunch;
+
 use Chewett\UglifyCSS\CSSUglify;
 use Chewett\UglifyJS\JSUglify;
 
