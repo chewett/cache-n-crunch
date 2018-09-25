@@ -8,19 +8,19 @@ use Symfony\Component\Filesystem\Filesystem;
 class CNCSetupTest extends \PHPUnit_Framework_TestCase {
 
     public function testSetup() {
-        $cacheDir = __DIR__ . "/../build/output/cache/";
+        $cacheDir = __DIR__ . "/../build/output/test_cache/cncsetuptest/";
 
         if(is_dir($cacheDir)) {
             $fs = new Filesystem();
             $fs->remove($cacheDir);
         }
 
-        CacheNCrunch::setUpCacheDirectory($cacheDir, '/build/output/cache/');
-        CacheNCrunch::setDebugMode(false);
+        $cnc = new CacheNCrunch();
+        $cnc->setUpCacheDirectory($cacheDir, "Foobar");
+        $cnc->setDebugMode(false);
 
-        $this->assertFileExists(CacheNCrunch::getCacheDirectory() . CacheNCrunch::$CACHE_FILE_DIR);
-        $this->assertFileExists(CacheNCrunch::getCacheDirectory() . CacheNCrunch::$CACHE_FILE_DIR . CacheNCrunch::$FILE_CACHE_DETAILS);
-
+        //Make sure the directory has been created
+        $this->assertFileExists($cacheDir);
     }
 
 }
