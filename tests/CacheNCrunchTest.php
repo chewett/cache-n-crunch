@@ -137,6 +137,26 @@ class CacheNCrunchTest extends \PHPUnit_Framework_TestCase {
     /**
      * @dataProvider headerFileProvider
      */
+    public function testNoFilesToCrunch($jsHeaderFile, $cssHeaderFile) {
+        if($jsHeaderFile) {
+            $this->cnc->setUglifyJsHeaderFile($jsHeaderFile);
+        }
+        if($cssHeaderFile) {
+            $this->cnc->setUglifyCssHeaderFile($cssHeaderFile);
+        }
+
+        $this->cnc->crunch();
+
+        $importStatements = $this->cnc->getScriptImports();
+
+        //Make sure there is no import statements at all
+        $this->assertEquals(0, substr_count($importStatements, "script src="));
+        $this->assertEquals(0, substr_count($importStatements, "link href="));
+    }
+
+    /**
+     * @dataProvider headerFileProvider
+     */
     public function testCrunch($jsHeaderFile, $cssHeaderFile) {
         if($jsHeaderFile) {
             $this->cnc->setUglifyJsHeaderFile($jsHeaderFile);
