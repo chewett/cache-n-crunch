@@ -38,8 +38,10 @@ class Cruncher {
      */
     private static function doFilesNeedCrunching($cachedDatToCheck, $filesToImport, $md5HashOfScriptNames) {
         $fileSetNeedsCrunching = false;
+        if($md5HashOfScriptNames === null) {
+            //If the hash is null then it doesnt need crunching
 
-        if(isset($cachedDatToCheck[$md5HashOfScriptNames])) {
+        }else if(isset($cachedDatToCheck[$md5HashOfScriptNames])) {
             //If we already have this hash, lets check each file has the right MD5
             $allMd5sTheSame = true;
             foreach($filesToImport as $fileToImport) {
@@ -148,6 +150,7 @@ class Cruncher {
             $jsData[$md5HashOfJsScriptNames] = $newCrushedFileData;
         }
 
+        //FIXME: Even when there is no css file to crunch, an empty set, it still "crunches" files.
         if($cssFileSetNeedsCrunching) {
             $flatConstituentPhysicalPaths = self::getPhysicalPathsOfImports($cssFileImportOrder, $cssFilesToImport);
             $constituentFilesArr = self::getFullDetailsOfFilesToImport($cssFileImportOrder, $cssFilesToImport);
@@ -182,9 +185,12 @@ class Cruncher {
     /**
      * This loops through the list of imports and generates the specific hash representing
      * the cache object that will be created for this specific file set
-     * @return string Hash string representing the cache object for the file set
+     * @return string|null Hash string representing the cache object for the file set, Null if no imports are given
      */
     public static function getHashOfImports($importList) {
+        if(!$importList) {
+            return null;
+        }
         return md5(json_encode($importList));
     }
 

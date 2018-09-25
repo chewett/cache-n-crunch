@@ -135,7 +135,6 @@ class CacheNCrunch
             $this->crunch();
         }
 
-        $stringImports = '';
         $JS_FILES = [];
         $CSS_FILES = [];
         if(!$this->cncSettings->isDebugMode()) {
@@ -145,8 +144,12 @@ class CacheNCrunch
 
         $currentJsImportsHashString = Cruncher::getHashOfImports($this->jsFileImportOrder);
 
+        //No files to crunch, so no string
+        if($currentJsImportsHashString === null) {
+            $jsFileImportString = "";
+
         //If we are not in debug mode and we have this file already crunched then link to the crunched file
-        if(!$this->cncSettings->isDebugMode() && isset($JS_FILES[$currentJsImportsHashString])) {
+        }else if(!$this->cncSettings->isDebugMode() && isset($JS_FILES[$currentJsImportsHashString])) {
             $jsFileImportString = CNCHtmlHelper::createJsImportStatement($JS_FILES[$currentJsImportsHashString]['cacheUrl']);
         }else{
             //Otherwise create the X import statements needed to import the raw JS
@@ -160,8 +163,13 @@ class CacheNCrunch
         }
 
         $currentCssImportsHashString = Cruncher::getHashOfImports($this->cssFileImportOrder);
+
+        //No files to crunch, so no string
+        if($currentCssImportsHashString === null) {
+            $cssFileImportString = "";
+
         //If we are not in debug mode and we have this file already crunched then link to the crunched file
-        if(!$this->cncSettings->isDebugMode() && isset($JS_FILES[$currentJsImportsHashString])) {
+        } else if(!$this->cncSettings->isDebugMode() && isset($CSS_FILES[$currentCssImportsHashString])) {
             $cssFileImportString = CNCHtmlHelper::createCssImportStatement($CSS_FILES[$currentCssImportsHashString]['cacheUrl']);
         }else{
             //Otherwise create the X import statements needed to import the raw CSS

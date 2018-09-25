@@ -89,6 +89,54 @@ class CacheNCrunchTest extends \PHPUnit_Framework_TestCase {
     /**
      * @dataProvider headerFileProvider
      */
+    public function testNoJsFilesToCrunch($jsHeaderFile, $cssHeaderFile) {
+        if($jsHeaderFile) {
+            $this->cnc->setUglifyJsHeaderFile($jsHeaderFile);
+        }
+        if($cssHeaderFile) {
+            $this->cnc->setUglifyCssHeaderFile($cssHeaderFile);
+        }
+
+        $this->cnc->registerCssFile("testCss", "/static/testCss.css", __DIR__ . "/../static/testCss.css");
+        $this->cnc->crunch();
+
+        $importStatements = $this->cnc->getScriptImports();
+
+        //Make sure there is only one import for CSS
+        $this->assertEquals(0, substr_count($importStatements, "script src="));
+        $this->assertEquals(1, substr_count($importStatements, "link href="));
+        //Make sure its not importing the old files directly
+        $this->assertEquals(0, substr_count($importStatements, "testJs.js"));
+        $this->assertEquals(0, substr_count($importStatements, "testCss.css"));
+    }
+
+    /**
+     * @dataProvider headerFileProvider
+     */
+    public function testNoCssFilesToCrunch($jsHeaderFile, $cssHeaderFile) {
+        if($jsHeaderFile) {
+            $this->cnc->setUglifyJsHeaderFile($jsHeaderFile);
+        }
+        if($cssHeaderFile) {
+            $this->cnc->setUglifyCssHeaderFile($cssHeaderFile);
+        }
+
+        $this->cnc->registerJsFile("testJs", "/static/testJs.js", __DIR__ . "/../static/testJs.js");
+        $this->cnc->crunch();
+
+        $importStatements = $this->cnc->getScriptImports();
+
+        //Make sure there is only one import for JS
+        $this->assertEquals(1, substr_count($importStatements, "script src="));
+        $this->assertEquals(0, substr_count($importStatements, "link href="));
+        //Make sure its not importing the old files directly
+        $this->assertEquals(0, substr_count($importStatements, "testJs.js"));
+        $this->assertEquals(0, substr_count($importStatements, "testCss.css"));
+    }
+
+    /**
+     * @dataProvider headerFileProvider
+     */
     public function testCrunch($jsHeaderFile, $cssHeaderFile) {
         if($jsHeaderFile) {
             $this->cnc->setUglifyJsHeaderFile($jsHeaderFile);
