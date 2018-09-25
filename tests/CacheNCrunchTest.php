@@ -31,8 +31,16 @@ class CacheNCrunchTest extends \PHPUnit_Framework_TestCase {
         ];
     }
 
+    private function getCacheDir() {
+        return __DIR__ . "/../build/output/test_cache/" . str_replace('"', '_', $this->getName(true)) . "/";
+    }
+
+    private function getCacheFile() {
+        return $this->getCacheDir() . "/CacheNCrunch/cacheFile.php";
+    }
+
     public function setUp() {
-        $cacheDir = __DIR__ . "/../build/output/test_cache/" . str_replace('"', '_', $this->getName(true)) . "/";
+        $cacheDir = $this->getCacheDir();
 
         if(is_dir($cacheDir)) {
             $fs = new Filesystem();
@@ -235,6 +243,97 @@ class CacheNCrunchTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals(0, substr_count($importStatements, "testCss.css"));
         $this->assertEquals(0, substr_count($importStatements, "testA.css"));
     }
+
+    /**
+     * Tests to see whether the crunched file changes when the header file changes
+     */
+    public function testJsHeaderFileChanges() {
+        $jsHeaderFile = __DIR__ ."/../vendor/chewett/php-uglifyjs/build/headerfile.js";
+        $jsHeaderFile2  = __DIR__ . "/../vendor/chewett/php-uglifyjs/build/emptyFile.js";
+
+        $this->cnc->setUglifyJsHeaderFile($jsHeaderFile);
+        $this->cnc->registerJsFile("testJs", "/static/testJs.js", __DIR__ . "/../static/testJs.js");
+        $this->cnc->crunch();
+
+        $JS_FILES = [];
+        require $this->getCacheFile();
+
+        $allCrushedKeys = array_keys($JS_FILES);
+
+        //Make sure there is only one file
+        $this->assertCount(1, $allCrushedKeys);
+
+        $crushedFilePath = $JS_FILES[$allCrushedKeys[0]]['cachePath'];
+        $crushedJsFile = file_get_contents($crushedFilePath);
+
+        //Check we have the copyright line in the full file
+        $this->assertEquals(1, substr_count($crushedJsFile, "chewett/php-uglify"));
+
+        //Now change the file and re-crush
+        $this->cnc->setUglifyJsHeaderFile($jsHeaderFile2);
+        $this->cnc->crunch();
+
+        $JS_FILES = [];
+        require $this->getCacheFile();
+
+        $allCrushedKeys = array_keys($JS_FILES);
+
+        //Make sure there is only one file
+        $this->assertCount(1, $allCrushedKeys);
+
+        $crushedFilePath = $JS_FILES[$allCrushedKeys[0]]['cachePath'];
+        $crushedJsFile = file_get_contents($crushedFilePath);
+
+        //Check we no longer have the copyright details in the output
+        $this->assertEquals(0, substr_count($crushedJsFile, "chewett/php-uglify"));
+    }
+
+    /**
+     * Tests to see whether the crunched file is rebuilt when the header file changes
+     */
+    public function testCssHeaderFileChanges() {
+        $cssHeaderFile = __DIR__ . "/../vendor/chewett/php-uglifycss/build/headerfile.css";
+        $cssHeaderFile2 = __DIR__ . "/../vendor/chewett/php-uglifycss/build/emptyFile.css";
+
+        $this->cnc->setUglifyJsHeaderFile($cssHeaderFile);
+        $this->cnc->registerCssFile("testCss", "/static/testCss.css", __DIR__ . "/../static/testCss.css");
+        $this->cnc->crunch();
+
+        $CSS_FILES = [];
+        require $this->getCacheFile();
+
+        $allCrushedKeys = array_keys($CSS_FILES);
+
+        //Make sure there is only one file
+        $this->assertCount(1, $allCrushedKeys);
+
+        $crushedFilePath = $CSS_FILES[$allCrushedKeys[0]]['cachePath'];
+        $crushedCssFile = file_get_contents($crushedFilePath);
+
+        //Check we have the copyright line in the full file
+        $this->assertEquals(1, substr_count($crushedCssFile, "chewett/php-uglify"));
+
+        //Now change the file and re-crush
+        $this->cnc->setUglifyJsHeaderFile($cssHeaderFile2);
+        $this->cnc->crunch();
+
+        $CSS_FILES = [];
+        require $this->getCacheFile();
+
+        $allCrushedKeys = array_keys($CSS_FILES);
+
+        //Make sure there is only one file
+        $this->assertCount(1, $allCrushedKeys);
+
+        $crushedFilePath = $CSS_FILES[$allCrushedKeys[0]]['cachePath'];
+        $crushedCssFile = file_get_contents($crushedFilePath);
+
+        //Check we no longer have the copyright details in the output
+        $this->assertEquals(0, substr_count($crushedCssFile, "chewett/php-uglify"));
+
+
+    }
+
 
     /**
      * @dataProvider headerFileProvider
