@@ -35,6 +35,14 @@ class CacheNCrunch
         $this->checkCacheDirectory();
     }
 
+    public function setCrunchAlwaysOnDevMode($alwaysCrushInDevMode) {
+        $this->cncSettings->setCrunchAlwaysOnDevMode($alwaysCrushInDevMode);
+    }
+
+    public function setDontServeCrunchedFiles($dontServeCrunchedFiles) {
+        $this->cncSettings->setDontServeCrunchedFiles($dontServeCrunchedFiles);
+    }
+
     /**
      * @return CachingFile[]
      */
@@ -149,7 +157,7 @@ class CacheNCrunch
             $jsFileImportString = "";
 
         //If we are not in debug mode and we have this file already crunched then link to the crunched file
-        }else if(!$this->cncSettings->isDebugMode() && isset($JS_FILES[$currentJsImportsHashString])) {
+        }else if(!$this->cncSettings->isDontServeCrunchedFiles() && !$this->cncSettings->isDebugMode() && isset($JS_FILES[$currentJsImportsHashString])) {
             $jsFileImportString = CNCHtmlHelper::createJsImportStatement($JS_FILES[$currentJsImportsHashString]['cacheUrl']);
         }else{
             //Otherwise create the X import statements needed to import the raw JS
@@ -169,7 +177,7 @@ class CacheNCrunch
             $cssFileImportString = "";
 
         //If we are not in debug mode and we have this file already crunched then link to the crunched file
-        } else if(!$this->cncSettings->isDebugMode() && isset($CSS_FILES[$currentCssImportsHashString])) {
+        } else if(!$this->cncSettings->isDontServeCrunchedFiles() && !$this->cncSettings->isDebugMode() && isset($CSS_FILES[$currentCssImportsHashString])) {
             $cssFileImportString = CNCHtmlHelper::createCssImportStatement($CSS_FILES[$currentCssImportsHashString]['cacheUrl']);
         }else{
             //Otherwise create the X import statements needed to import the raw CSS
