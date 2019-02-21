@@ -295,7 +295,7 @@ class CacheNCrunchTest extends \PHPUnit_Framework_TestCase {
         $cssHeaderFile = __DIR__ . "/../vendor/chewett/php-uglifycss/build/headerfile.css";
         $cssHeaderFile2 = __DIR__ . "/../vendor/chewett/php-uglifycss/build/emptyFile.css";
 
-        $this->cnc->setUglifyJsHeaderFile($cssHeaderFile);
+        $this->cnc->setUglifyCssHeaderFile($cssHeaderFile);
         $this->cnc->registerCssFile("testCss", "/static/testCss.css", __DIR__ . "/../static/testCss.css");
         $this->cnc->crunch();
 
@@ -314,7 +314,7 @@ class CacheNCrunchTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals(1, substr_count($crushedCssFile, "chewett/php-uglify"));
 
         //Now change the file and re-crush
-        $this->cnc->setUglifyJsHeaderFile($cssHeaderFile2);
+        $this->cnc->setUglifyCssHeaderFile($cssHeaderFile2);
         $this->cnc->crunch();
 
         $CSS_FILES = [];
@@ -442,6 +442,86 @@ class CacheNCrunchTest extends \PHPUnit_Framework_TestCase {
             "<link href='/static/testCss.css' rel='stylesheet'><script src='/static/testJs.js'></script>",
             $this->cnc->getScriptImports()
         );
+    }
+
+    /**
+     * Test whether that when we tell it not to serve crunched files, it will crunch and serve the crunched file
+     * @dataProvider headerFileProvider
+     */
+    public function testCrunchIfNotAlreadyCrunchedWhenForcingNoCrunch($jsHeaderFile, $cssHeaderFile) {
+        if ($jsHeaderFile) {
+            $this->cnc->setUglifyJsHeaderFile($jsHeaderFile);
+        }
+        if ($cssHeaderFile) {
+            $this->cnc->setUglifyCssHeaderFile($cssHeaderFile);
+        }
+        $this->cnc->setCrunchIfNotAlreadyCrunched(true);
+        $this->cnc->setDontServeCrunchedFiles(true);
+        $this->cnc->registerJsFile("testJs", "/static/testJs.js", __DIR__ . "/../static/testJs.js");
+        $this->cnc->registerCssFile("testCss", "/static/testCss.css", __DIR__ . "/../static/testCss.css");
+        $this->assertEquals(
+            "<link href='/static/testCss.css' rel='stylesheet'><script src='/static/testJs.js'></script>",
+            $this->cnc->getScriptImports()
+        );
+    }
+
+    /**
+     * Tests to make sure when we ask to crunch when there are no files, it crunches and returns the newly crunched files
+     *
+     * @dataProvider headerFileProvider
+     */
+    public function testAutoCrunchingWhenNoCrunchedFiles($jsHeaderFile, $cssHeaderFile) {
+        if($jsHeaderFile) {
+            $this->cnc->setUglifyJsHeaderFile($jsHeaderFile);
+        }
+        if($cssHeaderFile) {
+            $this->cnc->setUglifyCssHeaderFile($cssHeaderFile);
+        }
+
+        $this->cnc->setCrunchIfNotAlreadyCrunched(true);
+
+        $this->cnc->registerJsFile("testJs", "/static/testJs.js", __DIR__ . "/../static/testJs.js");
+        $this->cnc->registerJsFile("testA", "/static/testA.js", __DIR__ . "/../static/testA.js");
+        $this->cnc->registerCssFile("testCss", "/static/testCss.css", __DIR__ . "/../static/testCss.css");
+        $this->cnc->registerCssFile("testA", "/static/testA.css", __DIR__ . "/../static/testA.css");
+
+        $this->cnc->getScriptImports();
+        $importStatements = $this->cnc->getScriptImports();
+
+        //Make sure there is only one import for each type
+        $this->assertEquals(1, substr_count($importStatements, "script src="));
+        $this->assertEquals(1, substr_count($importStatements, "link href="));
+        //Make sure its not importing the old files directly
+        $this->assertEquals(0, substr_count($importStatements, "testJs.js"));
+        $this->assertEquals(0, substr_count($importStatements, "testA.js"));
+        $this->assertEquals(0, substr_count($importStatements, "testCss.css"));
+        $this->assertEquals(0, substr_count($importStatements, "testA.css"));
+    }
+
+    public function testClearingJsImports() {
+        $this->cnc->registerJsFile("testJs", "/static/testJs.js", __DIR__ . "/../static/testJs.js");
+        $this->cnc->registerJsFile("testA", "/static/testA.js", __DIR__ . "/../static/testA.js");
+
+        $this->assertCount(2, $this->cnc->getJsFilesToImport());
+        $this->assertCount(2, $this->cnc->getJsFileImportOrder());
+
+        $this->cnc->clearJsFileImports();
+
+        $this->assertCount(0, $this->cnc->getJsFilesToImport());
+        $this->assertCount(0, $this->cnc->getJsFileImportOrder());
+    }
+
+    public function testClearingCssImports() {
+        $this->cnc->registerCssFile("testCss", "/static/testCss.css", __DIR__ . "/../static/testCss.css");
+        $this->cnc->registerCssFile("testA", "/static/testA.css", __DIR__ . "/../static/testA.css");
+
+        $this->assertCount(2, $this->cnc->getCssFilesToImport());
+        $this->assertCount(2, $this->cnc->getCssFileImportOrder());
+
+        $this->cnc->clearCssFileImports();
+
+        $this->assertCount(0, $this->cnc->getCssFilesToImport());
+        $this->assertCount(0, $this->cnc->getCssFileImportOrder());
     }
 
 

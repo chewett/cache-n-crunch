@@ -43,6 +43,10 @@ class CacheNCrunch
         $this->cncSettings->setDontServeCrunchedFiles($dontServeCrunchedFiles);
     }
 
+    public function setCrunchIfNotAlreadyCrunched($crunchIfNotAlreadyCrunched) {
+        $this->cncSettings->setCrunchIfNotAlreadyCrunched($crunchIfNotAlreadyCrunched);
+    }
+
     /**
      * @return CachingFile[]
      */
@@ -69,6 +73,16 @@ class CacheNCrunch
      */
     public function getCssFileImportOrder() {
         return $this->cssFileImportOrder;
+    }
+
+    public function clearJsFileImports() {
+        $this->jsFilesToImport = [];
+        $this->jsFileImportOrder = [];
+    }
+
+    public function clearCssFileImports() {
+        $this->cssFilesToImport = [];
+        $this->cssFileImportOrder = [];
     }
 
     /**
@@ -160,14 +174,22 @@ class CacheNCrunch
         }else if(!$this->cncSettings->isDontServeCrunchedFiles() && !$this->cncSettings->isDebugMode() && isset($JS_FILES[$currentJsImportsHashString])) {
             $jsFileImportString = CNCHtmlHelper::createJsImportStatement($JS_FILES[$currentJsImportsHashString]['cacheUrl']);
         }else{
-            //Otherwise create the X import statements needed to import the raw JS
-            $stringImports = [];
-            //Force the order of the imports
-            foreach($this->jsFileImportOrder as $scriptName) {
-                $cachingFile = $this->jsFilesToImport[$scriptName];
-                $stringImports[] = CNCHtmlHelper::createJsImportStatement($cachingFile->getPublicPath());
+            //Check to see if we want to crunch files if they havent already been crunched. If so crunch and then get the import
+            if(!$this->cncSettings->isDontServeCrunchedFiles() && !$this->cncSettings->isDebugMode() && $this->cncSettings->isCrunchIfNotAlreadyCrunched()) {
+                $this->crunch();
+                require $this->cncSettings->getCacheFileLocation();
+                $jsFileImportString = CNCHtmlHelper::createJsImportStatement($JS_FILES[$currentJsImportsHashString]['cacheUrl']);
+            }else{
+
+                //Otherwise create the X import statements needed to import the raw JS
+                $stringImports = [];
+                //Force the order of the imports
+                foreach($this->jsFileImportOrder as $scriptName) {
+                    $cachingFile = $this->jsFilesToImport[$scriptName];
+                    $stringImports[] = CNCHtmlHelper::createJsImportStatement($cachingFile->getPublicPath());
+                }
+                $jsFileImportString = implode("", $stringImports);
             }
-            $jsFileImportString = implode("", $stringImports);
         }
 
         $currentCssImportsHashString = Cruncher::getHashOfImports($this->cssFileImportOrder);
@@ -180,14 +202,22 @@ class CacheNCrunch
         } else if(!$this->cncSettings->isDontServeCrunchedFiles() && !$this->cncSettings->isDebugMode() && isset($CSS_FILES[$currentCssImportsHashString])) {
             $cssFileImportString = CNCHtmlHelper::createCssImportStatement($CSS_FILES[$currentCssImportsHashString]['cacheUrl']);
         }else{
-            //Otherwise create the X import statements needed to import the raw CSS
-            $stringImports = [];
-            //Force the order of the imports
-            foreach($this->cssFileImportOrder as $scriptName) {
-                $cachingFile = $this->cssFilesToImport[$scriptName];
-                $stringImports[] = CNCHtmlHelper::createCssImportStatement($cachingFile->getPublicPath());
+            //Check to see if we want to crunch files if they havent already been crunched. If so crunch and then get the import
+            if(!$this->cncSettings->isDontServeCrunchedFiles() && !$this->cncSettings->isDebugMode() && $this->cncSettings->isCrunchIfNotAlreadyCrunched()) {
+                $this->crunch();
+                require $this->cncSettings->getCacheFileLocation();
+                $cssFileImportString = CNCHtmlHelper::createCssImportStatement($CSS_FILES[$currentCssImportsHashString]['cacheUrl']);
+            }else {
+
+                //Otherwise create the X import statements needed to import the raw CSS
+                $stringImports = [];
+                //Force the order of the imports
+                foreach ($this->cssFileImportOrder as $scriptName) {
+                    $cachingFile = $this->cssFilesToImport[$scriptName];
+                    $stringImports[] = CNCHtmlHelper::createCssImportStatement($cachingFile->getPublicPath());
+                }
+                $cssFileImportString = implode("", $stringImports);
             }
-            $cssFileImportString = implode("", $stringImports);
         }
 
         return $cssFileImportString . $jsFileImportString;
@@ -199,6 +229,48 @@ class CacheNCrunch
 
     private function checkCacheDirectory() {
         CNCSetup::setupBaseDirs($this->cncSettings);
+    }
+
+    /**
+     * Loads up the cache and returns it in an array so that it can be used by the page
+     * @return array
+     */
+    public function getCacheStoreData() {
+        $JS_FILES = []; $CSS_FILES = [];
+        require $this->cncSettings->getCacheFileLocation();
+
+        return [
+            'js' => $JS_FILES,
+            'css' => $CSS_FILES
+        ];
+    }
+
+    /**
+     * Loop through every single crunched object and crunch them if needed.
+     */
+    public function crunchAnythingNeeded() {
+        $allCurrentCacheData = $this->getCacheStoreData();
+        foreach($allCurrentCacheData['js'] as $jsFileCached) {
+            $this->cncSettings->setUglifyJsHeaderFile(($jsFileCached['headerFile'] ? $jsFileCached['headerFile'] : null));
+
+            foreach($jsFileCached as $jsFileScriptName => $jsFileDetails) {
+                $this->registerJsFile($jsFileScriptName, "this_doesnt_matter", $jsFileDetails['physicalPath']);
+            }
+
+            $this->crunch();
+            $this->clearJsFileImports();
+        }
+
+        foreach($allCurrentCacheData['css'] as $cssFileCached) {
+            $this->cncSettings->setUglifyCssHeaderFile(($jsFileCached['headerFile'] ? $jsFileCached['headerFile'] : null));
+
+            foreach($cssFileCached as $cssFileScriptName => $cssFileDetails) {
+                $this->registerCssFile($cssFileScriptName, "this_doesnt_matter", $cssFileDetails['physicalPath']);
+            }
+
+            $this->crunch();
+            $this->clearCssFileImports();
+        }
     }
 
 }

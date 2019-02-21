@@ -27,6 +27,7 @@ class CNCSettings {
 
     private $crunchAlwaysOnDevMode = true;
     private $dontServeCrunchedFiles = false;
+    private $crunchIfNotAlreadyCrunched = false;
 
     private $cacheDirectory = '';
     private $cacheWebRoot = '';
@@ -135,6 +136,22 @@ class CNCSettings {
      */
     public function setDontServeCrunchedFiles($dontServeCrunchedFiles) {
         $this->dontServeCrunchedFiles = $dontServeCrunchedFiles;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isCrunchIfNotAlreadyCrunched() {
+        return $this->crunchIfNotAlreadyCrunched;
+    }
+
+    /**
+     * @param $crunchIfNotAlreadyCrunched
+     * @return $this
+     */
+    public function setCrunchIfNotAlreadyCrunched($crunchIfNotAlreadyCrunched) {
+        $this->crunchIfNotAlreadyCrunched = $crunchIfNotAlreadyCrunched;
         return $this;
     }
 

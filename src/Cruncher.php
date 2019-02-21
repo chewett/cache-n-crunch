@@ -36,7 +36,7 @@ class Cruncher {
      * @param string $md5HashOfScriptNames
      * @return bool
      */
-    private static function doFilesNeedCrunching($cachedDatToCheck, $filesToImport, $md5HashOfScriptNames) {
+    private static function doFilesNeedCrunching($cachedDatToCheck, $filesToImport, $md5HashOfScriptNames, $headerFile) {
         $fileSetNeedsCrunching = false;
         if($md5HashOfScriptNames === null) {
             //If the hash is null then it doesnt need crunching
@@ -48,6 +48,16 @@ class Cruncher {
                 $allMd5sTheSame = $allMd5sTheSame &&
                     (md5_file($fileToImport->getPhysicalPath()) ==
                         $cachedDatToCheck[$md5HashOfScriptNames]['constituentFiles'][$fileToImport->getScriptName()]['originalMd5']);
+            }
+
+            if($headerFile) {
+                if($cachedDatToCheck[$md5HashOfScriptNames]['headerMd5'] != md5_file($headerFile)) {
+                    $allMd5sTheSame = false;
+                }
+            }else{
+                if($cachedDatToCheck[$md5HashOfScriptNames]['headerMd5'] != '') {
+                    $allMd5sTheSame = false;
+                }
             }
 
             if(!$allMd5sTheSame) {
@@ -119,10 +129,10 @@ class Cruncher {
         }
 
         $md5HashOfJsScriptNames = self::getHashOfImports($jsFileImportOrder);
-        $jsFileSetNeedsCrunching = self::doFilesNeedCrunching($jsData, $jsFilesToImport, $md5HashOfJsScriptNames);
+        $jsFileSetNeedsCrunching = self::doFilesNeedCrunching($jsData, $jsFilesToImport, $md5HashOfJsScriptNames, $cncSettings->getUglifyJsHeaderFile());
 
         $md5HashOfCssScriptNames = self::getHashOfImports($cssFileImportOrder);
-        $cssFileSetNeedsCrunching = self::doFilesNeedCrunching($cssData, $cssFilesToImport, $md5HashOfCssScriptNames);
+        $cssFileSetNeedsCrunching = self::doFilesNeedCrunching($cssData, $cssFilesToImport, $md5HashOfCssScriptNames, $cncSettings->getUglifyCssHeaderFile());
 
         if($jsFileSetNeedsCrunching) {
             $flatConstituentPhysicalPaths = self::getPhysicalPathsOfImports($jsFileImportOrder, $jsFilesToImport);
@@ -143,7 +153,9 @@ class Cruncher {
             $newCrushedFileData = [
                 'cachePath' => $pathOfCrushedFile,
                 'cacheUrl' => $cncSettings->getCacheWebRoot() . $cncSettings->getJsCacheDirOutput() . $md5OfCrushedFile . ".js",
-                'constituentFiles' => $constituentFilesArr
+                'constituentFiles' => $constituentFilesArr,
+                'headerFile' => $cncSettings->getUglifyJsHeaderFile(),
+                'headerMd5' => ($cncSettings->getUglifyJsHeaderFile() ? md5_file($cncSettings->getUglifyJsHeaderFile()) : "")
             ];
 
             $md5HashOfJsScriptNames = self::getHashOfImports($jsFileImportOrder);
@@ -170,7 +182,9 @@ class Cruncher {
             $newCrushedFileData = [
                 'cachePath' => $pathOfCrushedFile,
                 'cacheUrl' => $cncSettings->getCacheWebRoot() . $cncSettings->getCssCacheDirOutput() . $md5OfCrushedFile . ".css",
-                'constituentFiles' => $constituentFilesArr
+                'constituentFiles' => $constituentFilesArr,
+                'headerFile' => $cncSettings->getUglifyCssHeaderFile(),
+                'headerMd5' => ($cncSettings->getUglifyCssHeaderFile() ? md5_file($cncSettings->getUglifyCssHeaderFile()) : "")
             ];
 
             $md5HashOfCssScriptNames = self::getHashOfImports($cssFileImportOrder);
