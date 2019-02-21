@@ -249,11 +249,15 @@ class CacheNCrunch
      * Loop through every single crunched object and crunch them if needed.
      */
     public function crunchAnythingNeeded() {
+        //Start by clearing all imports, lets make sure its clean.
+        $this->clearJsFileImports();
+        $this->clearCssFileImports();
+
         $allCurrentCacheData = $this->getCacheStoreData();
         foreach($allCurrentCacheData['js'] as $jsFileCached) {
             $this->cncSettings->setUglifyJsHeaderFile(($jsFileCached['headerFile'] ? $jsFileCached['headerFile'] : null));
 
-            foreach($jsFileCached as $jsFileScriptName => $jsFileDetails) {
+            foreach($jsFileCached['constituentFiles'] as $jsFileScriptName => $jsFileDetails) {
                 $this->registerJsFile($jsFileScriptName, "this_doesnt_matter", $jsFileDetails['physicalPath']);
             }
 
@@ -264,7 +268,7 @@ class CacheNCrunch
         foreach($allCurrentCacheData['css'] as $cssFileCached) {
             $this->cncSettings->setUglifyCssHeaderFile(($jsFileCached['headerFile'] ? $jsFileCached['headerFile'] : null));
 
-            foreach($cssFileCached as $cssFileScriptName => $cssFileDetails) {
+            foreach($cssFileCached['constituentFiles'] as $cssFileScriptName => $cssFileDetails) {
                 $this->registerCssFile($cssFileScriptName, "this_doesnt_matter", $cssFileDetails['physicalPath']);
             }
 

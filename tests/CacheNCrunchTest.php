@@ -524,5 +524,62 @@ class CacheNCrunchTest extends \PHPUnit_Framework_TestCase {
         $this->assertCount(0, $this->cnc->getCssFileImportOrder());
     }
 
+    /**
+     * Crunch some files, then change their contents, then crunch again!
+     *
+     * @dataProvider headerFileProvider
+     */
+    public function testCrunchAllNeeded($jsHeaderFile, $cssHeaderFile) {
+        if($jsHeaderFile) {
+            $this->cnc->setUglifyJsHeaderFile($jsHeaderFile);
+        }
+        if($cssHeaderFile) {
+            $this->cnc->setUglifyCssHeaderFile($cssHeaderFile);
+        }
+
+        $randomJsFile = __DIR__ ."/../static/randomJsFile.js";
+        $randomCssFile = __DIR__ . "/../static/randomCssFile.css";
+
+        file_put_contents($randomJsFile, "console.log('hello this is random " . uniqid(time() . "asdasd", true) . "')");
+        file_put_contents($randomCssFile, "body { -hellothisisrandom" . uniqid(time() . "asdasd", true) . ": true}");
+
+        $this->cnc->registerJsFile("randomJsFile", "/static/randomJsFile.js", $randomJsFile);
+        $this->cnc->registerCssFile("randomCssFile", "/static/randomCssFile.css", $randomCssFile);
+
+        $this->cnc->crunch();
+        $initialImportStatements = $this->cnc->getScriptImports();
+
+        //Make sure there is only one import for each type
+        $this->assertEquals(1, substr_count($initialImportStatements, "script src="));
+        $this->assertEquals(1, substr_count($initialImportStatements, "link href="));
+        //Make sure its not importing the old files directly
+        $this->assertEquals(0, substr_count($initialImportStatements, "randomJsFile.js"));
+        $this->assertEquals(0, substr_count($initialImportStatements, "randomCssFile.css"));
+
+        //Now change the file contents
+        file_put_contents($randomJsFile, "console.log('hello this is random " . uniqid(time() . "asdasd", true) . "')");
+        file_put_contents($randomCssFile, "body { -hellothisisrandom" . uniqid(time() . "asdasd", true) . ": true}");
+        //And crunch, which should then update the files
+        $this->cnc->crunchAnythingNeeded();
+
+        //Now re-register them, and get the script imports
+        $this->cnc->registerJsFile("randomJsFile", "/static/randomJsFile.js", $randomJsFile);
+        $this->cnc->registerCssFile("randomCssFile", "/static/randomCssFile.css", $randomCssFile);
+        $newImportStatements = $this->cnc->getScriptImports();
+
+        //Now time to see whether the import has changed, it should have as the contents has changed
+        $this->assertNotEquals($initialImportStatements, $newImportStatements);
+
+        //Make sure there is only one import for each type
+        $this->assertEquals(1, substr_count($newImportStatements, "script src="));
+        $this->assertEquals(1, substr_count($newImportStatements, "link href="));
+        //Make sure its not importing the old files directly
+        $this->assertEquals(0, substr_count($initialImportStatements, "randomJsFile.js"));
+        $this->assertEquals(0, substr_count($initialImportStatements, "randomCssFile.css"));
+
+
+
+    }
+
 
 }

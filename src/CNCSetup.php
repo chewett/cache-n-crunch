@@ -57,9 +57,9 @@ class CNCSetup {
             }
 
             $cacheFile .= '$JS_FILES["'.$scriptName.'"] = [';
-            $cacheFile .= '"cachePath" => "'.$dataElement['cachePath'].'",';
+            $cacheFile .= '"cachePath" => "'.str_replace("\\", "/", $dataElement['cachePath']).'",';
             $cacheFile .= '"cacheUrl" => "'.$dataElement['cacheUrl'].'",';
-            $cacheFile .= '"headerFile" => "' . $dataElement['headerFile'] . '",';
+            $cacheFile .= '"headerFile" => "' . str_replace("\\", "/", $dataElement['headerFile']) . '",';
             $cacheFile .= '"headerMd5" => "' . $dataElement['headerMd5'] . '",';
             $cacheFile .= '"constituentFiles" => ['.implode(", ", $constituentFilesArr).']];' . PHP_EOL;
         }
