@@ -1,6 +1,10 @@
 cache-n-crush
 =============
 
+**Please note: This is a custom caching framework designed both to play around with using uglify js
+ and uglify css, and to be used for a custom website not suited for standard caching systems.
+ In production you probably will want to use other caching frameworks such as assetic.**
+
 Version 0.1 was a proof of concept to test if it worked.
 Since this does indeed appear to work im going to rework it to fill a number of potential objectives:
 
@@ -22,6 +26,14 @@ Since this does indeed appear to work im going to rework it to fill a number of 
     * Allow marking a crunch as "stale" after a file has been removed from the filesystem
     * Some way to view this potentially?
 * Have some basic versioning of crunched files
+
+Current Issues
+--------------
+
+* Modifying header files does not force a cache clear
+* header files are not tracked for modification
+
+
 
 Possible implementation
 -----------------------
