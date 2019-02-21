@@ -30,8 +30,6 @@ Since this does indeed appear to work im going to rework it to fill a number of 
 Current Issues
 --------------
 
-* Modifying header files does not force a cache clear
-* header files are not tracked for modification
 
 
 
