@@ -277,4 +277,7 @@ class CacheNCrunch
         }
     }
 
+    //TODO: Remove a single cached hash
+    //TOOD: Remove all cached hashes
+
 }
