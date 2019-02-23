@@ -85,6 +85,13 @@ class CacheNCrunch
         $this->cssFileImportOrder = [];
     }
 
+    public function registerJsAsArray($scriptDataArray) {
+        if(count($scriptDataArray) != 3) {
+            throw new \InvalidArgumentException("Incorrect number of elements in the array");
+        }
+        $this->registerJsFile($scriptDataArray[0], $scriptDataArray[1], $scriptDataArray[2]);
+    }
+
     /**
      * Registers the javascript file with the CacheNCrunch library
      * @param string $path Path to the Javascript file to be registered with the library
@@ -96,6 +103,13 @@ class CacheNCrunch
         }
         $this->jsFileImportOrder[] = $scriptName;
         $this->jsFilesToImport[$scriptName] = new CachingFile($scriptName, $publicPath, $physicalPath);
+    }
+
+    public function registerCssAsArray($scriptDataArray) {
+        if(count($scriptDataArray) != 3) {
+            throw new \InvalidArgumentException("Incorrect number of elements in the array");
+        }
+        $this->registerCssFile($scriptDataArray[0], $scriptDataArray[1], $scriptDataArray[2]);
     }
 
     public function registerCssFile($scriptName, $publicPath, $physicalPath) {
