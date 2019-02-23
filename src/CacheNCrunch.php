@@ -85,6 +85,20 @@ class CacheNCrunch
         $this->cssFileImportOrder = [];
     }
 
+    /**
+     * Pass in an array of arrays with 3 elements and register all the files
+     * @param $manyScriptDataElements
+     */
+    public function registerManyJsFilesAsArray($manyScriptDataElements) {
+        foreach($manyScriptDataElements as $scriptDataElement) {
+            $this->registerJsAsArray($scriptDataElement);
+        }
+    }
+
+    /**
+     * Instead of providing three parameters, you can provide an array with three elements.
+     * @param $scriptDataArray
+     */
     public function registerJsAsArray($scriptDataArray) {
         if(count($scriptDataArray) != 3) {
             throw new \InvalidArgumentException("Incorrect number of elements in the array");
@@ -105,6 +119,20 @@ class CacheNCrunch
         $this->jsFilesToImport[$scriptName] = new CachingFile($scriptName, $publicPath, $physicalPath);
     }
 
+    /**
+     * Pass in an array of arrays with 3 elements and register all the files
+     * @param $manyScriptDataElements
+     */
+    public function registerManyCssFilesAsArray($manyScriptDataElements) {
+        foreach($manyScriptDataElements as $scriptDataElement) {
+            $this->registerCssAsArray($scriptDataElement);
+        }
+    }
+
+    /**
+     * Instead of providing three parameters, you can provide an array with three elements.
+     * @param $scriptDataArray
+     */
     public function registerCssAsArray($scriptDataArray) {
         if(count($scriptDataArray) != 3) {
             throw new \InvalidArgumentException("Incorrect number of elements in the array");
